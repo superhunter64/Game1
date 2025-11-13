@@ -7,4 +7,5 @@
 namespace Resources
 {
 	inline std::map<std::string, SDL_Texture*> Textures;
+	void LoadTextures(std::string_view path);
 }

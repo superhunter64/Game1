@@ -20,7 +20,7 @@ endif()
 project ("Game1")
 set(EXECUTABLE_NAME ${PROJECT_NAME})
 # Add source to this project's executable.
-add_executable (Game1 "src/Game1.cpp" "src/Game1.h" "src/App.h" "src/shared/Resources.h" "src/components/Sprite.h")
+add_executable (Game1 "src/Game1.cpp" "src/Game1.h" "src/App.h" "src/shared/Resources.h" "src/components/Sprite.h" "src/shared/Resources.cpp")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
