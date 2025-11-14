@@ -15,6 +15,7 @@
 #include "App.h"
 #include "shared/Resources.h"
 #include "shared/Paths.h"
+#include "systems/Animation.h"
 
 AnimatedSprite animatedSprite{}; 
 
@@ -70,19 +71,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
     //animate 
     
-    animatedSprite.frameElapsed += App::DeltaTime;
-    if (animatedSprite.frameElapsed > animatedSprite.frame.duration)
-    {
-        animatedSprite.frameElapsed = 0;
-        animatedSprite.animFrame += 1;
-        if (animatedSprite.animFrame > animatedSprite.anim.to)
-        {
-            animatedSprite.animFrame = animatedSprite.anim.from;
-        }
-
-        animatedSprite.frame = animatedSprite.sheet->sprites.at(animatedSprite.animFrame);
-    }
-
+    Animator::Update(animatedSprite);
 
     /* clear the window to the draw color. */
     SDL_RenderClear(App::Renderer);

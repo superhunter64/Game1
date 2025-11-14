@@ -1,5 +1,5 @@
 #include "../App.h"
-#include "../system/File.h"
+#include "../backend/File.h"
 #include "Paths.h"
 #include "Resources.h"
 #include <SDL3_image/SDL_image.h>
@@ -120,21 +120,16 @@ void Resources::LoadSpriteSheets(const std::string& path)
 		if (Textures.find(key) == Textures.end())
 		{
 			// add the texture
-			SDL_Surface* surface = IMG_Load(FullPath(path, image).c_str());
-			if (not surface)
+			SDL_Texture* texture = IMG_LoadTexture(App::Renderer, FullPath(path, image).c_str());
+			if (texture)
 			{
-				SDL_Log("Image loading failed: %s", SDL_GetError());
+				SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+			}
+			else
+			{
+				SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't load image %s", SDL_GetError());
 				continue;
 			}
-
-			SDL_Texture* texture = SDL_CreateTextureFromSurface(App::Renderer, surface);
-			if (not texture)
-			{
-				SDL_Log("Creating texture failed: %s", SDL_GetError());
-			}
-
-			SDL_DestroySurface(surface);
-			surface = NULL;
 
 			Textures.emplace(key, texture);
 			sheet.texture = texture;
