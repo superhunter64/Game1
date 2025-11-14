@@ -13,6 +13,8 @@
 #include <SDL3/SDL_main.h>
 
 #include "App.h"
+#include "shared/Resources.h"
+#include "shared/Paths.h"
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
@@ -31,6 +33,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
     SDL_SetRenderLogicalPresentation(App::Renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    Resources::LoadTextures(Path::Textures);
+    Resources::LoadSpriteSheets(Path::SpriteSheets);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -55,9 +60,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     const float blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
     SDL_SetRenderDrawColorFloat(App::Renderer, red, green, blue, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
 
+    SDL_FRect srcRect{
+        0.0f, 0.0f, 1775.0f, 1181.0f
+    };
+
     /* clear the window to the draw color. */
     SDL_RenderClear(App::Renderer);
 
+    SDL_RenderTexture(App::Renderer, Resources::Textures["RAD"], &srcRect, NULL);
     /* put the newly-cleared rendering on the screen. */
     SDL_RenderPresent(App::Renderer);
 

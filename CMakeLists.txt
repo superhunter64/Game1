@@ -20,7 +20,7 @@ endif()
 project ("Game1")
 set(EXECUTABLE_NAME ${PROJECT_NAME})
 # Add source to this project's executable.
-add_executable (Game1 "src/Game1.cpp" "src/Game1.h" "src/App.h" "src/shared/Resources.h" "src/components/Sprite.h" "src/shared/Resources.cpp")
+add_executable (Game1 "src/Game1.cpp" "src/Game1.h" "src/App.h" "src/shared/Resources.h" "src/components/Sprite.h" "src/shared/Resources.cpp" "src/shared/Paths.h" "src/system/File.h" "src/system/File.cpp")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
@@ -59,12 +59,15 @@ set(SDLIMAGE_JPEG OFF)
 set(SDLIMAGE_WEBP OFF)
 add_subdirectory(SDL_image EXCLUDE_FROM_ALL)
 
+add_subdirectory(nlohmann_json EXCLUDE_FROM_ALL)
+
 # Link SDL to our executable. This also makes its include directory available to us. 
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC 
 	SDL3_ttf::SDL3_ttf      # remove if you are not using SDL_ttf
 	#SDL3_mixer::SDL3_mixer  # remove if you are not using SDL_mixer
 	SDL3_image::SDL3_image	# remove if you are not using SDL_image
     SDL3::SDL3              # If using satelite libraries, SDL must be the last item in the list. 
+	nlohmann_json::nlohmann_json
 )
 
 # on Visual Studio, set our app as the default project
