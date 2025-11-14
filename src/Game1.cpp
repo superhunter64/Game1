@@ -16,6 +16,12 @@
 #include "shared/Resources.h"
 #include "shared/Paths.h"
 
+AnimatedSprite animatedSprite{}; 
+
+Uint64 NOW = SDL_GetPerformanceCounter();
+Uint64 LAST = 0;
+double deltaTime = 0;
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
@@ -32,10 +38,17 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    SDL_SetRenderLogicalPresentation(App::Renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderLogicalPresentation(App::Renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX); 
+    
+    NOW = SDL_GetPerformanceCounter();
+    LAST = 0;
+    deltaTime = 0;
 
     Resources::LoadTextures(Path::Textures);
     Resources::LoadSpriteSheets(Path::SpriteSheets);
+
+    animatedSprite.sheet = Resources::GetSheet("Idle");
+    animatedSprite.anim = Resources::GetAnim("Idle", "Idle");
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -53,21 +66,28 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
-    const double now = ((double)SDL_GetTicks()) / 1000.0;  /* convert from milliseconds to seconds. */
-    /* choose the color for the frame we will draw. The sine wave trick makes it fade between colors smoothly. */
-    const float red = (float)(0.5 + 0.5 * SDL_sin(now));
-    const float green = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-    const float blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
-    SDL_SetRenderDrawColorFloat(App::Renderer, red, green, blue, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
+    App::Update();
 
-    SDL_FRect srcRect{
-        0.0f, 0.0f, 1775.0f, 1181.0f
-    };
+    //animate 
+    
+    animatedSprite.frameElapsed += App::DeltaTime;
+    if (animatedSprite.frameElapsed > animatedSprite.frame.duration)
+    {
+        animatedSprite.frameElapsed = 0;
+        animatedSprite.animFrame += 1;
+        if (animatedSprite.animFrame > animatedSprite.anim.to)
+        {
+            animatedSprite.animFrame = animatedSprite.anim.from;
+        }
+
+        animatedSprite.frame = animatedSprite.sheet->sprites.at(animatedSprite.animFrame);
+    }
+
 
     /* clear the window to the draw color. */
     SDL_RenderClear(App::Renderer);
 
-    SDL_RenderTexture(App::Renderer, Resources::Textures["RAD"], &srcRect, NULL);
+    SDL_RenderTexture(App::Renderer, animatedSprite.sheet->texture, &animatedSprite.frame.src, NULL);
     /* put the newly-cleared rendering on the screen. */
     SDL_RenderPresent(App::Renderer);
 

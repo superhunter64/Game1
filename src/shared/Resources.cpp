@@ -85,12 +85,12 @@ void Resources::LoadSpriteSheets(const std::string& path)
 		std::ifstream f(FullPath(path, file));
 		json data = json::parse(f);
 
-		SpriteSheet sheet{};
-
 		auto& meta = data["meta"];
 		auto image = meta["image"].get<std::string>();
 		auto& frameTags = meta["frameTags"];
 		auto& frames = data["frames"];
+
+		SpriteSheet sheet{};
 		for (auto& frame : frames)
 		{
 			Sprite sprite{};
@@ -139,5 +139,44 @@ void Resources::LoadSpriteSheets(const std::string& path)
 			Textures.emplace(key, texture);
 			sheet.texture = texture;
 		}
+
+		SpriteSheets.emplace(key, sheet);
 	}
+}
+
+Animation Resources::GetAnim(const std::string& sheetName, const std::string& animName)
+{
+	if (SpriteSheets.find(sheetName) != SpriteSheets.end())
+	{
+		auto& sheet = SpriteSheets[sheetName];
+		if (sheet.animations.find(animName) != sheet.animations.end())
+		{
+			return sheet.animations[animName];
+		}
+	}
+
+	return {};
+}
+
+double Resources::GetFrameTime(const std::string& sheetName, int currentFrame)
+{
+	double time = 0;
+
+	if (SpriteSheets.find(sheetName) != SpriteSheets.end())
+	{
+		auto& sheet = SpriteSheets[sheetName];
+		time = sheet.sprites.at(currentFrame).duration;
+	}
+
+	return time;
+}
+
+SpriteSheet* Resources::GetSheet(const std::string& sheetName)
+{
+	if (SpriteSheets.find(sheetName) != SpriteSheets.end())
+	{
+		return &SpriteSheets[sheetName];
+	}
+
+	return nullptr;
 }

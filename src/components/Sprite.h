@@ -21,5 +21,15 @@ struct SpriteSheet
 {
 	std::unordered_map<std::string, Animation> animations;
 	std::vector<Sprite> sprites;
-	SDL_Texture* texture;
+	SDL_Texture* texture = NULL;
+};
+
+struct AnimatedSprite
+{
+	SpriteSheet* sheet = nullptr;
+	Animation anim;
+	Sprite frame;
+
+	int animFrame = 0;
+	double frameElapsed = 0;
 };
