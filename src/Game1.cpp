@@ -1,14 +1,4 @@
-﻿/* clear.c ... */
-
-/*
- * This example code creates an SDL window and renderer, and then clears the
- * window to a different color every frame, so you'll effectively get a window
- * that's smoothly fading between colors.
- *
- * This code is public domain. Feel free to use it for any purpose!
- */
-
-#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
+﻿#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -49,7 +39,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     Resources::LoadSpriteSheets(Path::SpriteSheets);
 
     animatedSprite.sheet = Resources::GetSheet("Idle");
-    animatedSprite.anim = Resources::GetAnim("Idle", "Idle");
+    animatedSprite.anim = Resources::GetAnim("Idle", "Jump");
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -76,7 +66,8 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     /* clear the window to the draw color. */
     SDL_RenderClear(App::Renderer);
 
-    SDL_RenderTexture(App::Renderer, animatedSprite.sheet->texture, &animatedSprite.frame.src, NULL);
+    SDL_FRect dest{ 0, 0, animatedSprite.frame.src.w, animatedSprite.frame.src.h };
+    SDL_RenderTexture(App::Renderer, animatedSprite.sheet->texture, &animatedSprite.frame.src, &dest);
     /* put the newly-cleared rendering on the screen. */
     SDL_RenderPresent(App::Renderer);
 
