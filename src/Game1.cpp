@@ -1,6 +1,7 @@
 ﻿#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "App.h"
 #include "shared/Resources.h"
@@ -24,13 +25,20 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_CreateWindowAndRenderer("Game 1", 640, 480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &App::Window, &App::Renderer))
+    if (!SDL_CreateWindowAndRenderer("Game 1", App::Width, App::Height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &App::Window, &App::Renderer))
     {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    SDL_SetRenderLogicalPresentation(App::Renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX); 
-    
+    SDL_SetRenderLogicalPresentation(App::Renderer, App::Width, App::Height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderScale(App::Renderer, 3, 3);
+
+    if (!TTF_Init())
+    {
+        SDL_Log("Couldn't initialize SDL_ttf: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
     NOW = SDL_GetPerformanceCounter();
     LAST = 0;
     deltaTime = 0;
@@ -39,7 +47,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     Resources::LoadSpriteSheets(Path::SpriteSheets);
 
     animatedSprite.sheet = Resources::GetSheet("Idle");
-    animatedSprite.anim = Resources::GetAnim("Idle", "Jump");
+    animatedSprite.anim = Resources::GetAnim("Idle", "Idle");
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -50,6 +58,20 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
     if (event->type == SDL_EVENT_QUIT)
     {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+    }
+    if (event->type == SDL_EVENT_KEY_DOWN)
+    {
+        switch (event->key.key)
+        {
+            case SDLK_2:
+            {
+                Animator::Play(animatedSprite, "Jump");
+            } break;
+            case SDLK_1:
+            {
+                Animator::Play(animatedSprite, "Idle");
+            } break;
+        }
     }
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -78,4 +100,5 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
     /* SDL will clean up the window/renderer for us. */
+    TTF_Quit();
 }

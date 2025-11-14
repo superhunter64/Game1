@@ -2,6 +2,8 @@
 
 namespace App
 {
+	inline int Width = 1920;
+	inline int Height = 1080;
 	inline SDL_Window* Window = nullptr;
 	inline SDL_Renderer* Renderer = nullptr;
 	inline SDL_AppResult Result = SDL_APP_CONTINUE;
