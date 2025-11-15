@@ -4,5 +4,6 @@
 
 struct Character : Entity
 {
+	std::string name;
 	AnimatedSprite sprite;
 };

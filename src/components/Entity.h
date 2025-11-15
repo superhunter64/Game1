@@ -3,10 +3,9 @@
 struct Transform
 {
 	float x, y;
-	
 };
 
-struct Entity : Transform
+struct Entity
 {
-
+	Transform transform;
 };

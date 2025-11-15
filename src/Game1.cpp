@@ -7,8 +7,11 @@
 #include "shared/Resources.h"
 #include "shared/Paths.h"
 #include "systems/Animation.h"
+#include "components/Character.h"
+#include "world/Map.h"
 
-AnimatedSprite animatedSprite{}; 
+Character player{}; 
+World::Map map;
 
 Uint64 NOW = SDL_GetPerformanceCounter();
 Uint64 LAST = 0;
@@ -46,10 +49,30 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     Resources::LoadTextures(Path::Textures);
     Resources::LoadSpriteSheets(Path::SpriteSheets);
 
-    animatedSprite.sheet = Resources::GetSheet("Idle");
-    animatedSprite.anim = Resources::GetAnim("Idle", "Idle");
+    player.name = "Player 1"; 
+    player.transform.x = 0;
+    player.transform.y = 0;
 
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
+    player.sprite.sheet = Resources::GetSheet("Idle");
+    player.sprite.anim = Resources::GetAnim("Idle", "Idle");
+
+    {
+        using namespace World;
+
+        MapParameters mp{};
+        mp.height = 10;
+        mp.width = 10;
+        mp.tileSet = {};
+        mp.tileSet.gridHeight = 16;
+        mp.tileSet.gridWidth = 16;
+        mp.tileSet.texture = Resources::Textures["Tiles"];
+        mp.tileSet.columns = 25;
+
+        map = Map(mp);
+        map.Generate();
+    }
+
+    return SDL_APP_CONTINUE;
 }
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
@@ -65,11 +88,11 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
         {
             case SDLK_2:
             {
-                Animator::Play(animatedSprite, "Jump");
+                Animator::Play(player.sprite, "Jump");
             } break;
             case SDLK_1:
             {
-                Animator::Play(animatedSprite, "Idle");
+                Animator::Play(player.sprite, "Idle");
             } break;
         }
     }
@@ -83,13 +106,15 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
     //animate 
     
-    Animator::Update(animatedSprite);
+    Animator::Update(player.sprite);
 
     /* clear the window to the draw color. */
     SDL_RenderClear(App::Renderer);
 
-    SDL_FRect dest{ 0, 0, animatedSprite.frame.src.w, animatedSprite.frame.src.h };
-    SDL_RenderTexture(App::Renderer, animatedSprite.sheet->texture, &animatedSprite.frame.src, &dest);
+    map.Draw(App::Renderer);
+
+    SDL_FRect dest{ player.transform.x, player.transform.y, player.sprite.frame.src.w, player.sprite.frame.src.h };
+    SDL_RenderTexture(App::Renderer, player.sprite.sheet->texture, &player.sprite.frame.src, &dest);
     /* put the newly-cleared rendering on the screen. */
     SDL_RenderPresent(App::Renderer);
 

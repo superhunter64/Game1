@@ -1,0 +1,14 @@
+{ "columns":25,
+ "image":"..\/..\/..\/..\/Users\/Hunter\/Downloads\/Legacy-Fantasy - High Forest 2.0\/Legacy-Fantasy - High Forest 2.3\/Assets\/Tiles.png",
+ "imageheight":400,
+ "imagewidth":400,
+ "margin":0,
+ "name":"map_1",
+ "spacing":0,
+ "tilecount":625,
+ "tiledversion":"1.11.0",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}
