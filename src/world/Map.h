@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include "Tile.h"
 #include <vector>
+#include <FastNoise/FastNoise.h>
 
 namespace World
 {

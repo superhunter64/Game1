@@ -28,7 +28,7 @@ add_executable (Game1 "src/Game1.cpp" "src/Game1.h"
 "src/systems/Animation.h" "src/systems/Animation.cpp" 
 "src/components/Entity.h" "src/components/Character.h" 
 "src/world/Tile.h" 
-"src/world/Map.h" "src/world/Map.cpp")
+"src/world/Map.h" "src/world/Map.cpp" "src/backend/Renderer.h" "src/backend/Renderer.cpp")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
@@ -69,13 +69,19 @@ add_subdirectory(SDL_image EXCLUDE_FROM_ALL)
 
 add_subdirectory(nlohmann_json EXCLUDE_FROM_ALL)
 
+add_subdirectory(FastNoise2 EXCLUDE_FROM_ALL)
+
+add_subdirectory(glad/)
+
 # Link SDL to our executable. This also makes its include directory available to us. 
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC 
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE 
+	glad
 	SDL3_ttf::SDL3_ttf      # remove if you are not using SDL_ttf
 	#SDL3_mixer::SDL3_mixer  # remove if you are not using SDL_mixer
 	SDL3_image::SDL3_image	# remove if you are not using SDL_image
     SDL3::SDL3              # If using satelite libraries, SDL must be the last item in the list. 
 	nlohmann_json::nlohmann_json
+	FastNoise
 )
 
 # on Visual Studio, set our app as the default project

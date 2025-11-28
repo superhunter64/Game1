@@ -1,9 +1,14 @@
 {
-    "activeFile": "",
+    "activeFile": "map_1.tsx",
     "expandedProjectPaths": [
+        "."
     ],
     "fileStates": {
         "map1.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "map_1.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         }
@@ -12,9 +17,11 @@
     "last.imagePath": "C:/Users/Hunter/Downloads/Legacy-Fantasy - High Forest 2.0/Legacy-Fantasy - High Forest 2.3/Assets",
     "lastUsedTilesetExportFilter": "JSON tileset files (*.tsj *.json)",
     "openFiles": [
+        "map_1.tsx"
     ],
     "project": "base.tiled-project",
     "recentFiles": [
+        "map_1.tsx",
         "map1.tsj"
     ],
     "tileset.lastUsedFormat": "tsx",
