@@ -3,8 +3,9 @@
 #include "Sprite.h"
 #include "Transform.h"
 
-struct Character : Entity
+struct Character
 {
 	std::string name;
 	AnimatedSprite sprite;
+	Transform2D transform;
 };

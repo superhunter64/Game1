@@ -128,6 +128,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(App::Renderer);
 
+    entities.UpdateAnims();
     entities.Draw();
     if (App::DebugEnabled) Wireframe::Draw(entities.GetRects());
 

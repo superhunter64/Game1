@@ -4,6 +4,12 @@
 #include "../components/Sprite.h"
 #include "../components/Transform.h"
 
+struct MobInfo
+{
+	std::string name;
+
+};
+
 class Mob
 {
 public:

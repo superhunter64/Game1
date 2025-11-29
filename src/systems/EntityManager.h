@@ -43,6 +43,14 @@ public:
 		return transforms;
 	}
 
+	inline void UpdateAnims()
+	{
+		for (auto& m : m_mobs)
+		{
+			Animator::Update(m.sprite);
+		}
+	}
+
 	inline void Draw()
 	{
 		for (auto& m : m_mobs)
