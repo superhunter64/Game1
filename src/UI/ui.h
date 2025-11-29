@@ -31,7 +31,7 @@ public:
 		transform.location.y = point.y;
 		transform.location.w = m_textTexture->w;
 		transform.location.h = m_textTexture->h;
-
+		
 		SDL_DestroySurface(surf);
 		surf = nullptr;
 	}
