@@ -22,4 +22,13 @@ namespace Wireframe
 			SDL_RenderRect(App::Renderer, &transform->location);
 		}
 	}
+
+	inline void Draw(std::vector<SDL_FRect> trans)
+	{
+		for (auto transform : trans)
+		{
+			SDL_SetRenderDrawColor(App::Renderer, 255, 165, 0, SDL_ALPHA_OPAQUE);
+			SDL_RenderRect(App::Renderer, &transform);
+		}
+	}
 }

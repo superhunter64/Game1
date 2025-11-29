@@ -7,7 +7,12 @@
 class Mob
 {
 public:
-	std::string name;
-	AnimatedSprite sprite;
-	Transform2D transform;
+	Mob(std::string mobName)
+	{
+		name = mobName;
+	}
+
+	std::string name = {};
+	AnimatedSprite sprite = {};
+	Transform2D transform = {};
 };

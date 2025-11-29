@@ -22,9 +22,10 @@ struct MobView
     Label mobLabel;
 };
 
+MobView mobView{};
 Character player{};
-World::Map map;
 
+EntityManager entities = {};
 Label testLabel;
 
 Uint64 NOW = SDL_GetPerformanceCounter();
@@ -69,6 +70,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     }
     testLabel = Label("This is a new label");
 
+
     NOW = SDL_GetPerformanceCounter();
     LAST = 0;
     deltaTime = 0;
@@ -76,30 +78,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     Resources::LoadTextures(Path::Textures);
     Resources::LoadSpriteSheets(Path::SpriteSheets);
 
-    player.name = "Player 1"; 
-    player.transform.x = 0;
-    player.transform.y = 0;
-
-    player.sprite.sheet = Resources::GetSheet("Sprite-0001");
-    player.sprite.anim = Resources::GetAnim("Sprite-0001", "idle");
+    mobView.mob = entities.SpawnMob();
+    mobView.mobLabel = Label(mobView.mob->name.c_str());
 
     Wireframe::Add(&testLabel.transform);
-
-    {
-        using namespace World;
-
-        MapParameters mp{};
-        mp.height = 10;
-        mp.width = 10;
-        mp.tileSet = {};
-        mp.tileSet.gridHeight = 16;
-        mp.tileSet.gridWidth = 16;
-        mp.tileSet.texture = Resources::Textures["Tiles"];
-        mp.tileSet.columns = 25;
-
-        map = Map(mp);
-        map.Generate();
-    }
 
     return SDL_APP_CONTINUE;
 }
@@ -143,20 +125,20 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
     App::Update();
-    Animator::Update(player.sprite);
+    Animator::Update(mobView.mob->sprite);
 
     SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(App::Renderer);
     //
     //map.Draw(App::Renderer);
     
-    SDL_FRect dest{ player.transform.x, player.transform.y, player.sprite.frame.src.w * 3, player.sprite.frame.src.h * 3};
-    SDL_RenderTexture(App::Renderer, player.sprite.sheet->texture, &player.sprite.frame.src, &dest);
+    //SDL_FRect dest{ player.transform.x, player.transform.y, player.sprite.frame.src.w * 3, player.sprite.frame.src.h * 3};
+    //SDL_RenderTexture(App::Renderer, player.sprite.sheet->texture, &player.sprite.frame.src, &dest);
     
     
     testLabel.Draw();
 
-    if (App::DebugEnabled) Wireframe::Draw();
+    if (App::DebugEnabled) Wireframe::Draw(entities.GetRects());
 
     SDL_RenderPresent(App::Renderer);
 

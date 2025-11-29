@@ -3,7 +3,7 @@
 
 struct Transform2D
 {
-	SDL_FRect location;
-	float rotation;
-	SDL_FPoint scale;
+	SDL_FRect location = {};
+	float rotation = 0;
+	SDL_FPoint scale = {1, 1};
 };
