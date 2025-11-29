@@ -16,14 +16,7 @@
 
 #include "systems/EntityManager.h"
 
-struct MobView
-{
-    Mob* mob;
-    Label mobLabel;
-};
-
-MobView mobView{};
-Character player{};
+Character player = {};
 
 EntityManager entities = {};
 Label testLabel;
@@ -78,6 +71,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     Resources::LoadTextures(Path::Textures);
     Resources::LoadSpriteSheets(Path::SpriteSheets);
 
+    entities.SpawnMob("Player", 100, 100, "Idle");
     entities.SpawnMob("Slime", 0, 0);
     entities.SpawnMob("Slime2", 20, 20);
 

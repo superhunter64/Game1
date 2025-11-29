@@ -9,13 +9,13 @@
 class EntityManager
 {
 public:
-	inline void SpawnMob(const char* mobName, float x, float y)
+	inline void SpawnMob(const char* mobName, float x, float y, const std::string& sheetName = "Sprite-0001")
 	{
 		auto strin = std::string(mobName);
 
 		Mob mob(strin);
-		mob.sprite.sheet = Resources::GetSheet("Sprite-0001");
-		mob.sprite.anim = Resources::GetAnim("Sprite-0001", "idle");
+		mob.sprite.sheet = Resources::GetSheet(sheetName);
+		mob.sprite.anim = Resources::GetAnim(sheetName, "idle");
 		mob.sprite.frame = mob.sprite.sheet->sprites.at(0);
 
 		mob.transform.location.x = x;
