@@ -78,10 +78,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     Resources::LoadTextures(Path::Textures);
     Resources::LoadSpriteSheets(Path::SpriteSheets);
 
-    mobView.mob = entities.SpawnMob();
-    mobView.mobLabel = Label(mobView.mob->name.c_str());
-
-    Wireframe::Add(&testLabel.transform);
+    entities.SpawnMob("Slime", 0, 0);
+    entities.SpawnMob("Slime2", 20, 20);
 
     return SDL_APP_CONTINUE;
 }
@@ -125,7 +123,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
     App::Update();
-    Animator::Update(mobView.mob->sprite);
+    //Animator::Update(mobView.mob->sprite);
 
     SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(App::Renderer);

@@ -9,20 +9,21 @@
 class EntityManager
 {
 public:
-	inline Mob* SpawnMob()
+	inline void SpawnMob(const char* mobName, float x, float y)
 	{
-		auto strin = std::string("Slime");
+		auto strin = std::string(mobName);
 
 		Mob mob(strin);
 		mob.sprite.sheet = Resources::GetSheet("Sprite-0001");
 		mob.sprite.anim = Resources::GetAnim("Sprite-0001", "idle");
+		mob.sprite.frame = mob.sprite.sheet->sprites.at(0);
 
+		mob.transform.location.x = x;
+		mob.transform.location.y = y;
 		mob.transform.location.w = mob.sprite.frame.src.w;
 		mob.transform.location.h = mob.sprite.frame.src.h;
 
 		m_mobs.push_back(std::move(mob));
-
-		return &m_mobs[m_mobs.size() - 1];
 	};
 
 	inline std::vector<SDL_FRect> GetRects()
