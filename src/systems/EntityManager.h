@@ -42,6 +42,13 @@ public:
 		return transforms;
 	}
 
+	inline void Draw()
+	{
+		for (auto& m : m_mobs)
+		{
+			m.Draw();
+		}
+	}
 
 private:
 	std::vector<Mob> m_mobs = {};

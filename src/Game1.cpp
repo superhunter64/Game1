@@ -129,15 +129,8 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
     SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(App::Renderer);
-    //
-    //map.Draw(App::Renderer);
-    
-    //SDL_FRect dest{ player.transform.x, player.transform.y, player.sprite.frame.src.w * 3, player.sprite.frame.src.h * 3};
-    //SDL_RenderTexture(App::Renderer, player.sprite.sheet->texture, &player.sprite.frame.src, &dest);
-    
-    
-    testLabel.Draw();
 
+    entities.Draw();
     if (App::DebugEnabled) Wireframe::Draw(entities.GetRects());
 
     SDL_RenderPresent(App::Renderer);
