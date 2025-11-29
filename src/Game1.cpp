@@ -11,9 +11,21 @@
 #include "systems/Animation.h"
 #include "components/Character.h"
 #include "world/Map.h"
+#include "UI/ui.h"
+#include "wireframe/Wireframe.h"
 
-Character player{}; 
+#include "systems/EntityManager.h"
+
+struct MobView
+{
+    Mob* mob;
+    Label mobLabel;
+};
+
+Character player{};
 World::Map map;
+
+Label testLabel;
 
 Uint64 NOW = SDL_GetPerformanceCounter();
 Uint64 LAST = 0;
@@ -36,13 +48,26 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
     SDL_SetRenderLogicalPresentation(App::Renderer, App::Width, App::Height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-    SDL_SetRenderScale(App::Renderer, 3, 3);
+    SDL_SetRenderScale(App::Renderer, 1, 1);
 
     if (!TTF_Init())
     {
         SDL_Log("Couldn't initialize SDL_ttf: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    App::TextEngine = TTF_CreateRendererTextEngine(App::Renderer);
+    if(not App::TextEngine)
+    {
+        SDL_Log("Couldn't create text engine: %s", SDL_GetError());
+    }
+
+    App::TypeFont = TTF_OpenFont("C:/dev/Game1/Assets/Fonts/OpenSans-Regular.ttf", 36);
+    if (not App::TypeFont)
+    {
+        SDL_Log("Couldn't create type font: %s", SDL_GetError());
+    }
+    testLabel = Label("This is a new label");
 
     NOW = SDL_GetPerformanceCounter();
     LAST = 0;
@@ -55,8 +80,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     player.transform.x = 0;
     player.transform.y = 0;
 
-    player.sprite.sheet = Resources::GetSheet("Idle");
-    player.sprite.anim = Resources::GetAnim("Idle", "Idle");
+    player.sprite.sheet = Resources::GetSheet("Sprite-0001");
+    player.sprite.anim = Resources::GetAnim("Sprite-0001", "idle");
+
+    Wireframe::Add(&testLabel.transform);
 
     {
         using namespace World;
@@ -88,6 +115,17 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
     {
         switch (event->key.key)
         {
+#ifdef _DEBUG
+            case SDLK_BACKSLASH: {
+                App::DebugEnabled = !App::DebugEnabled;
+                SDL_Log("Debug toggled");
+            } break;
+#endif
+            case SDLK_D:
+            {
+                testLabel.transform.location.x = 10;
+            } break;
+
             case SDLK_2:
             {
                 Animator::Play(player.sprite, "Jump");
@@ -105,19 +143,21 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
     App::Update();
-
-    //animate 
-    
     Animator::Update(player.sprite);
 
-    /* clear the window to the draw color. */
+    SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(App::Renderer);
-
-    map.Draw(App::Renderer);
-
-    SDL_FRect dest{ player.transform.x, player.transform.y, player.sprite.frame.src.w, player.sprite.frame.src.h };
+    //
+    //map.Draw(App::Renderer);
+    
+    SDL_FRect dest{ player.transform.x, player.transform.y, player.sprite.frame.src.w * 3, player.sprite.frame.src.h * 3};
     SDL_RenderTexture(App::Renderer, player.sprite.sheet->texture, &player.sprite.frame.src, &dest);
-    /* put the newly-cleared rendering on the screen. */
+    
+    
+    testLabel.Draw();
+
+    if (App::DebugEnabled) Wireframe::Draw();
+
     SDL_RenderPresent(App::Renderer);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
@@ -127,5 +167,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
     /* SDL will clean up the window/renderer for us. */
+    App::CleanUp();
     TTF_Quit();
 }

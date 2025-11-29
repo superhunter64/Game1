@@ -28,7 +28,7 @@ add_executable (Game1 "src/Game1.cpp" "src/Game1.h"
 "src/systems/Animation.h" "src/systems/Animation.cpp" 
 "src/components/Entity.h" "src/components/Character.h" 
 "src/world/Tile.h" 
-"src/world/Map.h" "src/world/Map.cpp" "src/backend/Renderer.h" "src/backend/Renderer.cpp")
+"src/world/Map.h" "src/world/Map.cpp" "src/backend/Renderer.h" "src/backend/Renderer.cpp" "src/components/Transform.h" "src/UI/ui.h" "src/wireframe/Wireframe.h" "src/systems/EntityManager.h" "src/entities/Mob.h")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
