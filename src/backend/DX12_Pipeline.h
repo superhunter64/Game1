@@ -1,4 +1,5 @@
 #pragma once
+#include "../App.h"
 #include "win_com.h"
 
 #include <Windows.h>
@@ -28,7 +29,7 @@ class DX12_Pipeline
 {
 public:
 
-	void Init();
+	void Init(HWND hwnd);
 
 	ComPtr<ID3D12Fence1> CreateFence();
 	ComPtr<IDXGISwapChain1> CreateSwapChain(int width, int height);
@@ -50,4 +51,6 @@ private:
 	DX12_DeviceResource m_rtv = {};		// Render Target View
 	DX12_DeviceResource m_dsv = {};		// Depth/Stencil View
 	DX12_DeviceResource m_CbvSrv = {};	// Constant Buffer, Shader Resource View
+
+	HWND m_hwnd = nullptr;
 };

@@ -18,6 +18,8 @@
 #include "systems/EntityManager.h"
 #include <cassert>
 
+#include "backend/DX12_Pipeline.h"
+
 Character player = {};
 
 EntityManager entities = {};
@@ -29,6 +31,8 @@ double deltaTime = 0;
 
 const char* D3D11 = "direct3d11";
 const char* D3D12 = "direct3d12";
+
+static DX12_Pipeline Pipeline = {};
 
 static bool streq(const char* str1, const char* str2)
 {
@@ -77,45 +81,50 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
 
-    App::Renderer = SDL_CreateRenderer(App::Window, D3D12);
-    if (not App::Renderer)
-    {
-        SDL_Log("Couldn't create renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
+    auto props = SDL_GetWindowProperties(App::Window);
+    App::hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 
-    SDL_SetRenderLogicalPresentation(App::Renderer, App::Width, App::Height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-    SDL_SetRenderScale(App::Renderer, 1, 1);
+    Pipeline.Init(App::hwnd);
 
-    if (!TTF_Init())
-    {
-        SDL_Log("Couldn't initialize SDL_ttf: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
-    App::TextEngine = TTF_CreateRendererTextEngine(App::Renderer);
-    if(not App::TextEngine)
-    {
-        SDL_Log("Couldn't create text engine: %s", SDL_GetError());
-    }
-
-    App::TypeFont = TTF_OpenFont("C:/dev/Game1/Assets/Fonts/OpenSans-Regular.ttf", 36);
-    if (not App::TypeFont)
-    {
-        SDL_Log("Couldn't create type font: %s", SDL_GetError());
-    }
-    testLabel = Label("This is a new label");
+    //App::Renderer = SDL_CreateRenderer(App::Window, "opengl");
+    //if (not App::Renderer)
+    //{
+    //    SDL_Log("Couldn't create renderer: %s", SDL_GetError());
+    //    return SDL_APP_FAILURE;
+    //}
+    //SDL_SetRenderLogicalPresentation(App::Renderer, App::Width, App::Height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    //SDL_SetRenderScale(App::Renderer, 1, 1);
+    //
+    //
+    //if (!TTF_Init())
+    //{
+    //    SDL_Log("Couldn't initialize SDL_ttf: %s", SDL_GetError());
+    //    return SDL_APP_FAILURE;
+    //}
+    //
+    //App::TextEngine = TTF_CreateRendererTextEngine(App::Renderer);
+    //if(not App::TextEngine)
+    //{
+    //    SDL_Log("Couldn't create text engine: %s", SDL_GetError());
+    //}
+    //
+    //App::TypeFont = TTF_OpenFont("C:/dev/Game1/Assets/Fonts/OpenSans-Regular.ttf", 36);
+    //if (not App::TypeFont)
+    //{
+    //    SDL_Log("Couldn't create type font: %s", SDL_GetError());
+    //}
+    //testLabel = Label("This is a new label");
 
     NOW = SDL_GetPerformanceCounter();
     LAST = 0;
     deltaTime = 0;
 
-    Resources::LoadTextures(Path::Textures);
-    Resources::LoadSpriteSheets(Path::SpriteSheets);
-
-    entities.SpawnMob("Player", 100, 100, "Idle");
-    entities.SpawnMob("Slime", 0, 0);
-    entities.SpawnMob("Slime2", 20, 20);
+    //Resources::LoadTextures(Path::Textures);
+    //Resources::LoadSpriteSheets(Path::SpriteSheets);
+    //
+    //entities.SpawnMob("Player", 100, 100, "Idle");
+    //entities.SpawnMob("Slime", 0, 0);
+    //entities.SpawnMob("Slime2", 20, 20);
 
     return SDL_APP_CONTINUE;
 }
@@ -160,14 +169,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 {
     App::Update();
 
-    SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(App::Renderer);
-
-    entities.UpdateAnims();
-    entities.Draw();
-    if (App::DebugEnabled) Wireframe::Draw(entities.GetRects());
-
-    SDL_RenderPresent(App::Renderer);
+    //SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
+    //SDL_RenderClear(App::Renderer);
+    //
+    //entities.UpdateAnims();
+    //entities.Draw();
+    //if (App::DebugEnabled) Wireframe::Draw(entities.GetRects());
+    //
+    //SDL_RenderPresent(App::Renderer);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -176,6 +185,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
     /* SDL will clean up the window/renderer for us. */
-    App::CleanUp();
-    TTF_Quit();
+    //App::CleanUp();
+    //TTF_Quit();
 }

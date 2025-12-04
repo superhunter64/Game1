@@ -2,6 +2,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_textengine.h>
 
+#include "Windows.h"
+
 namespace App
 {
 	inline int Width = 1920;
@@ -15,6 +17,8 @@ namespace App
 	inline Uint64 NOW = SDL_GetPerformanceCounter();
 	inline Uint64 LAST = 0;
 	inline bool DebugEnabled = false;
+
+	inline HWND hwnd;
 	
 	inline void Update()
 	{

@@ -1,17 +1,22 @@
 #include "DX12_Pipeline.h"
 
-void DX12_Pipeline::Init()
+void DX12_Pipeline::Init(HWND hwnd)
 {
+	SDL_Log("***Initializing DX12***");
 #ifdef _DEBUG
 	{
+		SDL_Log("Getting debug interface...");
 		ComPtr<ID3D12Debug> debug = nullptr;
 		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)));
 		debug->EnableDebugLayer();
 	}
 #endif
 
+	SDL_Log("Creating DXGI Factory...");
 	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFactory)));
 
+
+	SDL_Log("Creating DX12 Device...");
 	HRESULT hr = D3D12CreateDevice(
 		nullptr,	// default adapter
 		D3D_FEATURE_LEVEL_11_0,
@@ -20,6 +25,7 @@ void DX12_Pipeline::Init()
 
 	if (FAILED(hr))
 	{
+		SDL_Log("Device creation failed, fallback to warp adapter");
 		ComPtr<IDXGIAdapter> warpAdapter;
 		ThrowIfFailed(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
 		
@@ -29,11 +35,24 @@ void DX12_Pipeline::Init()
 			IID_PPV_ARGS(&m_device)));
 	}
 
+	m_hwnd = hwnd;
+
+
+	SDL_Log("Creating DX12 Fence...");
 	m_fence = CreateFence();
+
+	SDL_Log("Creating device resources...");
 	m_rtv = CreateDeviceResource(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_dsv = CreateDeviceResource(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	m_CbvSrv = CreateDeviceResource(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	
+	SDL_Log("Creating command objects...");
 	m_cmdDirect = CreateCommandObjects(D3D12_COMMAND_LIST_TYPE_DIRECT);
+	
+	SDL_Log("Creating swap chain...");
+	m_swapChain = CreateSwapChain(1920, 1080);
+
+	SDL_Log("***Finished DX12 Initialization***\n\n");
 
 	// check 4x MSAA Quality Support
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQual = {};
@@ -50,12 +69,29 @@ ComPtr<ID3D12Fence1> DX12_Pipeline::CreateFence()
 
 ComPtr<IDXGISwapChain1> DX12_Pipeline::CreateSwapChain(int width, int height)
 {
-	ComPtr<IDXGISwapChain1> swapChain = nullptr;
+	ComPtr<IDXGISwapChain1> swapChain;
 
 	swapChain.Reset();
 
-	DXGI_SWAP_CHAIN_DESC sd;
+	DXGI_SWAP_CHAIN_DESC1 sd = {};
+	sd.Width = width;
+	sd.Height = height;
+	sd.Format = m_backBufferFormat;
+	sd.Scaling = DXGI_SCALING_STRETCH;
+	sd.SampleDesc = { 1, 0 };
+	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	sd.BufferCount = 2;
+	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	sd.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
+	ThrowIfFailed(m_dxgiFactory->CreateSwapChainForHwnd(
+		m_cmdDirect.Queue.Get(),
+		m_hwnd,
+		&sd,
+		nullptr,
+		nullptr,
+		swapChain.GetAddressOf()));
 
 	return swapChain;
 }

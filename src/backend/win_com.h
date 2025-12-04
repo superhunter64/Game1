@@ -5,6 +5,7 @@
 #include <Windows.h>
 
 #include <stdexcept>
+#include <SDL3/SDL_log.h>
 
 void ThrowIfFailed(HRESULT hr);
 
