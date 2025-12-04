@@ -28,7 +28,12 @@ add_executable (Game1 "src/Game1.cpp" "src/Game1.h"
 "src/systems/Animation.h" "src/systems/Animation.cpp" 
 "src/components/Entity.h" "src/components/Character.h" 
 "src/world/Tile.h" 
-"src/world/Map.h" "src/world/Map.cpp" "src/backend/Renderer.h" "src/backend/Renderer.cpp" "src/components/Transform.h" "src/UI/ui.h" "src/wireframe/Wireframe.h" "src/systems/EntityManager.h" "src/entities/Mob.h")
+"src/world/Map.h" "src/world/Map.cpp" 
+"src/backend/Renderer.h" "src/backend/Renderer.cpp" 
+"src/components/Transform.h" "src/UI/ui.h" "src/wireframe/Wireframe.h" 
+"src/systems/EntityManager.h" "src/entities/Mob.h" 
+"src/backend/win_com.h" 
+"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
@@ -68,20 +73,20 @@ set(SDLIMAGE_WEBP OFF)
 add_subdirectory(SDL_image EXCLUDE_FROM_ALL)
 
 add_subdirectory(nlohmann_json EXCLUDE_FROM_ALL)
-
-add_subdirectory(FastNoise2 EXCLUDE_FROM_ALL)
-
-add_subdirectory(glad/)
+#add_subdirectory(FastNoise2 EXCLUDE_FROM_ALL)
+#add_subdirectory(glad/)
 
 # Link SDL to our executable. This also makes its include directory available to us. 
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE 
-	glad
+	d3d12 
+	dxgi 
+	d3dcompiler
 	SDL3_ttf::SDL3_ttf      # remove if you are not using SDL_ttf
 	#SDL3_mixer::SDL3_mixer  # remove if you are not using SDL_mixer
 	SDL3_image::SDL3_image	# remove if you are not using SDL_image
     SDL3::SDL3              # If using satelite libraries, SDL must be the last item in the list. 
 	nlohmann_json::nlohmann_json
-	FastNoise
+	#FastNoise
 )
 
 # on Visual Studio, set our app as the default project
