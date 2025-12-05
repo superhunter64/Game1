@@ -44,30 +44,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
     SDL_SetAppMetadata("Game 1", "0.1", "com.superhunter64.game1");
 
-    {
-        SDL_Log("***Driver Info***\n");
-        for (int i = 0; i < SDL_GetNumRenderDrivers(); i++)
-        {
-            SDL_Log("%d. %s", i + 1, SDL_GetRenderDriver(i));
-        }
-
-        IDXGIFactory1* factory = nullptr;
-
-        HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&factory));
-        assert(SUCCEEDED(hr));
-
-        UINT i = 0;
-        IDXGIAdapter* adapter = nullptr;
-        while (factory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND)
-        {
-            DXGI_ADAPTER_DESC desc;
-            adapter->GetDesc(&desc);
-            SDL_Log("Adapter: %ws", desc.Description);
-            ++i;
-        }
-        SDL_Log("******\n\n");
-    }
-
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());

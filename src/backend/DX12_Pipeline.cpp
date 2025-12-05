@@ -1,5 +1,20 @@
 #include "DX12_Pipeline.h"
 
+
+D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentBackBufferView(const DX12_DeviceResource* dr, UINT backBufferIndex)
+{
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
+		dr->Heap->GetCPUDescriptorHandleForHeapStart(),
+		backBufferIndex,
+		dr->DescriptorSize
+	);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilView(const DX12_DeviceResource* dr)
+{
+	return dr->Heap->GetCPUDescriptorHandleForHeapStart();
+}
+
 void DX12_Pipeline::Init(HWND hwnd)
 {
 	SDL_Log("***Initializing DX12***");
@@ -50,7 +65,7 @@ void DX12_Pipeline::Init(HWND hwnd)
 	m_cmdDirect = CreateCommandObjects(D3D12_COMMAND_LIST_TYPE_DIRECT);
 	
 	SDL_Log("Creating swap chain...");
-	m_swapChain = CreateSwapChain(1920, 1080);
+	m_swapChain = CreateSwapChain(1920, 1080, 2);
 
 	SDL_Log("***Finished DX12 Initialization***\n\n");
 
@@ -67,7 +82,7 @@ ComPtr<ID3D12Fence1> DX12_Pipeline::CreateFence()
 	return fence;
 }
 
-ComPtr<IDXGISwapChain1> DX12_Pipeline::CreateSwapChain(int width, int height)
+DX12_SwapChain DX12_Pipeline::CreateSwapChain(int width, int height, UINT backBufferCount)
 {
 	ComPtr<IDXGISwapChain1> swapChain;
 
@@ -80,7 +95,7 @@ ComPtr<IDXGISwapChain1> DX12_Pipeline::CreateSwapChain(int width, int height)
 	sd.Scaling = DXGI_SCALING_STRETCH;
 	sd.SampleDesc = { 1, 0 };
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	sd.BufferCount = 2;
+	sd.BufferCount = backBufferCount;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
@@ -93,13 +108,23 @@ ComPtr<IDXGISwapChain1> DX12_Pipeline::CreateSwapChain(int width, int height)
 		nullptr,
 		swapChain.GetAddressOf()));
 
-	return swapChain;
+	return { 0, backBufferCount, swapChain };
 }
 
-DX12_DeviceResource DX12_Pipeline::CreateDeviceResource(HEAPTYPE type)
+DX12_DeviceResource DX12_Pipeline::CreateDeviceResource(HEAPTYPE type, UINT numDescriptors)
 {
 	DX12_DeviceResource dr = {};
 	dr.DescriptorSize = m_device->GetDescriptorHandleIncrementSize(type);
+	dr.Type = type;
+
+	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+	desc.NumDescriptors = numDescriptors;
+	desc.Type = type;
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	desc.NodeMask = 0;
+	ThrowIfFailed(m_device->CreateDescriptorHeap(&desc, 
+		IID_PPV_ARGS(dr.Heap.GetAddressOf())));
+
 	return dr;
 }
 

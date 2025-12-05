@@ -33,7 +33,7 @@ add_executable (Game1 "src/Game1.cpp" "src/Game1.h"
 "src/components/Transform.h" "src/UI/ui.h" "src/wireframe/Wireframe.h" 
 "src/systems/EntityManager.h" "src/entities/Mob.h" 
 "src/backend/win_com.h" 
-"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp")
+"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp" "src/backend/DeviceResources.cpp")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
@@ -75,12 +75,16 @@ add_subdirectory(SDL_image EXCLUDE_FROM_ALL)
 add_subdirectory(nlohmann_json EXCLUDE_FROM_ALL)
 #add_subdirectory(FastNoise2 EXCLUDE_FROM_ALL)
 #add_subdirectory(glad/)
+add_subdirectory(DirectX-Headers-1.618.2)
+
+target_include_directories(${EXECUTABLE_NAME} PRIVATE DirectX-Headers-1.618.2/include/directx)
 
 # Link SDL to our executable. This also makes its include directory available to us. 
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE 
-	d3d12 
-	dxgi 
+	d3d12
+	dxgi
 	d3dcompiler
+	DirectX-Headers
 	SDL3_ttf::SDL3_ttf      # remove if you are not using SDL_ttf
 	#SDL3_mixer::SDL3_mixer  # remove if you are not using SDL_mixer
 	SDL3_image::SDL3_image	# remove if you are not using SDL_image
