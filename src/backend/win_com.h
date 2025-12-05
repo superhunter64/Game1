@@ -10,7 +10,7 @@
 
 typedef Microsoft::WRL::Wrappers::Event WinEvent;
 
-void ThrowIfFailed(HRESULT hr);
+void ThrowIfFailed(HRESULT hr, const char* msg = "");
 
 template<typename T>
 using ComPtr = Microsoft::WRL::ComPtr<T>;

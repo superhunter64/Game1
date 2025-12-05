@@ -9,6 +9,8 @@
 #include <d3d12shader.h>
 #include <d3dx12.h>
 
+#include <SDL3/SDL.h>
+
 namespace DX
 {
 	class DeviceResources
@@ -17,20 +19,22 @@ namespace DX
 
 	public:
 		DeviceResources() {}
-		void SetWindow(HWND hwnd);
+		void SetWindow();
 
+		void CreateDeviceResources();
+		void CreateWindowDependentResources();
 
 	private:
 		// Set up device resources
 		void InitDevice();
 		
-		const static size_t MAX_BACK_BUFFER_COUNT = 3;
-
+		const static size_t					MAX_BACK_BUFFER_COUNT = 3;
+		
 		// Direct3D objects
 		ComPtr<ID3D12Device>				m_device;
 		ComPtr<ID3D12CommandQueue>			m_commandQueue;
 		ComPtr<ID3D12GraphicsCommandList>	m_commandList;
-		ComPtr<ID3D12CommandAllocator>		m_commandAllocator;
+		ComPtr<ID3D12CommandAllocator>		m_commandAllocators[MAX_BACK_BUFFER_COUNT];
 
 		// Swap chain objects
 		ComPtr<IDXGIFactory4>				m_dxgiFactory;
@@ -50,6 +54,14 @@ namespace DX
 		D3D12_VIEWPORT						m_screenViewport;
 		D3D12_RECT							m_scissorRect;
 
+		// Device properties
 		HWND								m_window;
+		D3D_FEATURE_LEVEL                   m_featureLevel;
+
+		// D3D Properties
+		DXGI_FORMAT							m_backBufferFormat;
+		DXGI_FORMAT							m_depthBufferFormat;
+		UINT								m_backBufferIndex;
+		UINT								m_backBufferCount;
 	};
 }

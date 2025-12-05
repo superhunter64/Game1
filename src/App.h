@@ -30,6 +30,11 @@ namespace App
 		DeltaTime = ((NOW - LAST) * 1000 / (double)SDL_GetPerformanceFrequency());
 	}
 
+	inline void GetWindowSize(int* w, int* h)
+	{
+		SDL_GetWindowSize(Window, w, h);
+	}
+
 	inline void CleanUp()
 	{
 		TTF_DestroyRendererTextEngine(TextEngine);
