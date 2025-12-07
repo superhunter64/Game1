@@ -16,21 +16,24 @@ namespace DX
 {
 	class DeviceResources
 	{
-		DeviceResources() {}
 
 	public:
-//		DeviceResources() {}
+		DeviceResources() {}
+
+		// Set up device resources
+		void InitDevice();
 		void SetWindow();
 
-		void CreateDeviceResources();
+		void CreateDeviceResources(UINT backBufferCount);
 		void CreateWindowDependentResources();
 
 		// from https://learn.microsoft.com/en-us/windows/win32/direct3d12/creating-a-basic-direct3d-12-component#loadassets
 		void LoadAssets();
+		void Render();
+		void PopulateCommandList();
+		void WaitForGPU();
 
 	private:
-		// Set up device resources
-		void InitDevice();
 		
 		const static size_t					MAX_BACK_BUFFER_COUNT = 3;
 		
@@ -55,8 +58,8 @@ namespace DX
 		ComPtr<ID3D12DescriptorHeap>		m_rtvDescriptorHeap;
 		ComPtr<ID3D12DescriptorHeap>		m_dsvDescriptorHeap;
 		UINT								m_rtvDescriptorSize;
-		D3D12_VIEWPORT						m_screenViewport;
-		D3D12_RECT							m_scissorRect;
+		CD3DX12_VIEWPORT m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, 1920, 1080);
+		CD3DX12_RECT m_scissorRect = CD3DX12_RECT(0, 0, 1920, 1080);
 
 		// Device properties
 		HWND								m_window;
@@ -69,6 +72,9 @@ namespace DX
 		UINT								m_backBufferCount;
 
 		// I think this is just establishing vertex information and might be moved out since they're not really 'device resources'
-		ComPtr<ID3DBlob> m_rootSignature;
+		ComPtr<ID3D12RootSignature> m_rootSignature;
+		ComPtr<ID3D12PipelineState> m_pipelineState;
+		ComPtr<ID3D12Resource> m_vertexBuffer;
+		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	};
 }

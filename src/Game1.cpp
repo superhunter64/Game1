@@ -19,6 +19,7 @@
 #include <cassert>
 
 #include "backend/DX12_Pipeline.h"
+#include "backend/DeviceResources.h"
 
 Character player = {};
 
@@ -33,6 +34,7 @@ const char* D3D11 = "direct3d11";
 const char* D3D12 = "direct3d12";
 
 static DX12_Pipeline Pipeline = {};
+static DX::DeviceResources dr;
 
 static bool streq(const char* str1, const char* str2)
 {
@@ -60,7 +62,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     auto props = SDL_GetWindowProperties(App::Window);
     App::hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 
-    Pipeline.Init(App::hwnd);
+    // Pipeline.Init(App::hwnd);
 
     //App::Renderer = SDL_CreateRenderer(App::Window, "opengl");
     //if (not App::Renderer)
@@ -94,6 +96,13 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     NOW = SDL_GetPerformanceCounter();
     LAST = 0;
     deltaTime = 0;
+
+    dr.InitDevice();
+    dr.SetWindow();
+    dr.CreateDeviceResources(2);
+    dr.CreateWindowDependentResources();
+    dr.LoadAssets();
+    dr.PopulateCommandList();
 
     //Resources::LoadTextures(Path::Textures);
     //Resources::LoadSpriteSheets(Path::SpriteSheets);
@@ -145,6 +154,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 {
     App::Update();
 
+    dr.Render();
     //SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
     //SDL_RenderClear(App::Renderer);
     //

@@ -33,7 +33,7 @@ add_executable (Game1 "src/Game1.cpp" "src/Game1.h"
 "src/components/Transform.h" "src/UI/ui.h" "src/wireframe/Wireframe.h" 
 "src/systems/EntityManager.h" "src/entities/Mob.h" 
 "src/backend/win_com.h" 
-"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp" "src/backend/DeviceResources.cpp")
+"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp" "src/backend/DeviceResources.cpp" "src/backend/primitives/Vertex.h")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
