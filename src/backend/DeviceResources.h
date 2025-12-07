@@ -38,6 +38,10 @@ namespace DX
 		
 		const static size_t					MAX_BACK_BUFFER_COUNT = 3;
 		
+		// Window property cache
+		int m_width;
+		int m_height;
+
 		// Direct3D objects
 		ComPtr<ID3D12Device>				m_device;
 		ComPtr<ID3D12CommandQueue>			m_commandQueue;

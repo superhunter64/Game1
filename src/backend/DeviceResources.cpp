@@ -170,6 +170,9 @@ void DeviceResources::CreateWindowDependentResources()
     int w, h;
     App::GetWindowSize(&w, &h);
 
+    m_width = w;
+    m_height = h;
+
     SDL_Log("Creating or resizing swapchain...");
     // If the swap chain was already created, resize it, otherwise create a new one
     if (m_swapChain)
@@ -342,14 +345,16 @@ void DeviceResources::LoadAssets()
 
     m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 
+    float aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
+
     // Create the vertex buffer
     {
         Vertex triVerts[] =
         {
             // pos                  color
-            {{0.0f, 0.25f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},
-            {{0.25f, -0.25f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},
-            {{-0.25f, -0.25f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}
+            {{0.0f, 0.25f * aspectRatio, 0.0f}, {.8f, 0.0f, 0.0f, 1.0f}},
+            {{0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, .8f, 0.0f, 1.0f}},
+            {{-0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, 0.0f, .8f, 1.0f}}
         };
 
         const UINT vBufferSize = sizeof(triVerts);

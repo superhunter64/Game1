@@ -146,6 +146,9 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
             } break;
         }
     }
+    if (event->type == SDL_EVENT_WINDOW_RESIZED)
+    {
+    }
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
