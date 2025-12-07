@@ -7,7 +7,7 @@
 
 using namespace DX;
 
-void DeviceResources::InitDevice()
+void DeviceResources::DisplayAdapters()
 {
     {
         IDXGIFactory1* factory = nullptr;
@@ -28,29 +28,6 @@ void DeviceResources::InitDevice()
         }
         SDL_Log("******\n\n");
     }
-
-	SDL_Log("Creating DXGI Factory...");
-	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFactory)));
-
-
-	SDL_Log("Creating DX12 Device...");
-	HRESULT hr = D3D12CreateDevice(
-		nullptr,	// default adapter
-		D3D_FEATURE_LEVEL_11_0,
-		IID_PPV_ARGS(&m_device)
-	);
-
-	if (FAILED(hr))
-	{
-		SDL_Log("Device creation failed, fallback to warp adapter");
-		ComPtr<IDXGIAdapter> warpAdapter;
-		ThrowIfFailed(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
-		ThrowIfFailed(D3D12CreateDevice(
-			warpAdapter.Get(),
-			D3D_FEATURE_LEVEL_11_0,
-			IID_PPV_ARGS(&m_device)));
-	}
 }
 
 void DeviceResources::SetWindow()
@@ -72,16 +49,28 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
 	}
 #endif
 
-	SDL_Log("Creating DXGI Factory...");
-	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFactory)));
+    SDL_Log("Creating DXGI Factory...");
+    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFactory)));
 
 
-	SDL_Log("Creating DX12 Device...");
-	HRESULT hr = D3D12CreateDevice(
-		nullptr,	// default adapter
-		D3D_FEATURE_LEVEL_11_0,
-		IID_PPV_ARGS(&m_device)
-	);
+    SDL_Log("Creating DX12 Device...");
+    HRESULT hr = D3D12CreateDevice(
+        nullptr,	// default adapter
+        D3D_FEATURE_LEVEL_11_0,
+        IID_PPV_ARGS(&m_device)
+    );
+
+    if (FAILED(hr))
+    {
+        SDL_Log("Device creation failed, fallback to warp adapter");
+        ComPtr<IDXGIAdapter> warpAdapter;
+        ThrowIfFailed(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
+
+        ThrowIfFailed(D3D12CreateDevice(
+            warpAdapter.Get(),
+            D3D_FEATURE_LEVEL_11_0,
+            IID_PPV_ARGS(&m_device)));
+    }
 
     // Determine maximum supported feature level for this device
     static const D3D_FEATURE_LEVEL s_featureLevels[] =
@@ -107,6 +96,7 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
         m_featureLevel = D3D_FEATURE_LEVEL_11_0;
     }
 
+    SDL_Log("Creating command queue...");
     // Create command queue
     {
         D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -116,6 +106,7 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
         m_device->CreateCommandQueue(&desc, IID_PPV_ARGS(&m_commandQueue));
     }
 
+    SDL_Log("Creating render target view and depth stencil view...");
     // Create descriptor heaps for rtv and dsv
     {
         D3D12_DESCRIPTOR_HEAP_DESC rtvDesc = {};
@@ -135,6 +126,7 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
         }
     }
 
+    SDL_Log("Creating command objects...");
     // Create a command allocator for each back buffer
     for (UINT i = 0; i < m_backBufferCount; i++)
     {
@@ -152,6 +144,8 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
         IID_PPV_ARGS(&m_commandList)
     ));
      
+
+    SDL_Log("Creating fence...");
     // Create a fence for tracking GPU execution progress
     ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
     m_fenceValues[m_backBufferIndex]++;
@@ -176,6 +170,7 @@ void DeviceResources::CreateWindowDependentResources()
     int w, h;
     App::GetWindowSize(&w, &h);
 
+    SDL_Log("Creating or resizing swapchain...");
     // If the swap chain was already created, resize it, otherwise create a new one
     if (m_swapChain)
     {
@@ -217,6 +212,7 @@ void DeviceResources::CreateWindowDependentResources()
         ThrowIfFailed(swapChain.As(&m_swapChain), "failed to convert swapchain1 to swapchain4 comptr");
     }
 
+    SDL_Log("Establishing back buffers...");
     // Obtain the back buffers for the window which will be the final render targets
     // and create render target views for each of them
     for (UINT i = 0; i < m_backBufferCount; i++)
@@ -290,6 +286,7 @@ static std::wstring GetShaderPath(LPCWSTR fileName)
 
 void DeviceResources::LoadAssets()
 {
+    SDL_Log("Loading assets...");
     // Create an empty root signature
     {
         CD3DX12_ROOT_SIGNATURE_DESC desc;
@@ -380,6 +377,9 @@ void DeviceResources::LoadAssets()
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vBufferSize;
     }
+
+    // wait for setup to complete before continuing
+    WaitForGPU();
 }
 
 void DeviceResources::Render()
@@ -394,7 +394,7 @@ void DeviceResources::Render()
     // present the frame
     ThrowIfFailed(m_swapChain->Present(1, 0));
 
-    WaitForGPU();
+    PrepareNextFrame();
 }
 
 void DeviceResources::PopulateCommandList()
@@ -429,24 +429,32 @@ void DeviceResources::PopulateCommandList()
     ThrowIfFailed(m_commandList->Close());
 }
 
+// Wait for pending GPU work to complete
 void DeviceResources::WaitForGPU()
 {
-    // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-        // This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
-        // sample illustrates how to use fences for efficient resource usage and to
-        // maximize GPU utilization.
+    ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_backBufferIndex]));
 
-        // Signal and increment the fence value.
-    const UINT64 fence = m_fenceValues[m_backBufferIndex];
-    ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
+    ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_backBufferIndex], m_fenceEvent.Get()));
+    WaitForSingleObjectEx(m_fenceEvent.Get(), INFINITE, FALSE);
+
     m_fenceValues[m_backBufferIndex]++;
+}
 
-    // Wait until the previous frame is finished.
-    if (m_fence->GetCompletedValue() < fence)
-    {
-        ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent.Get()));
-        WaitForSingleObject(m_fenceEvent.Get(), INFINITE);
-    }
+// Prepare to render the next frame
+void DeviceResources::PrepareNextFrame()
+{
+    // schedule signal command in the queue
+    const UINT64 currentFenceValue = m_fenceValues[m_backBufferIndex];
+    ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), currentFenceValue));
 
     m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+    // Wait until the previous frame is finished.
+    if (m_fence->GetCompletedValue() < m_fenceValues[m_backBufferIndex])
+    {
+        ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_backBufferIndex], m_fenceEvent.Get()));
+        WaitForSingleObjectEx(m_fenceEvent.Get(), INFINITE, FALSE);
+    }
+
+    m_fenceValues[m_backBufferIndex] = currentFenceValue + 1;
 }

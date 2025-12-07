@@ -21,7 +21,7 @@ namespace DX
 		DeviceResources() {}
 
 		// Set up device resources
-		void InitDevice();
+		void DisplayAdapters();
 		void SetWindow();
 
 		void CreateDeviceResources(UINT backBufferCount);
@@ -32,6 +32,7 @@ namespace DX
 		void Render();
 		void PopulateCommandList();
 		void WaitForGPU();
+		void PrepareNextFrame();
 
 	private:
 		

@@ -33,7 +33,7 @@ double deltaTime = 0;
 const char* D3D11 = "direct3d11";
 const char* D3D12 = "direct3d12";
 
-static DX12_Pipeline Pipeline = {};
+//static DX12_Pipeline Pipeline = {};
 static DX::DeviceResources dr;
 
 static bool streq(const char* str1, const char* str2)
@@ -97,7 +97,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     LAST = 0;
     deltaTime = 0;
 
-    dr.InitDevice();
+    dr.DisplayAdapters();
     dr.SetWindow();
     dr.CreateDeviceResources(2);
     dr.CreateWindowDependentResources();
