@@ -1,6 +1,5 @@
 #include "File.h"
 #include <vector>
-#include <string>
 
 SDL_EnumerationResult FS::EnumerateDirectory(void* userData, const char* dirName, const char* fname)
 {
@@ -40,4 +39,9 @@ void FS::GetFiles(const char* dir, void* data)
 	{
 		SDL_Log("All files enumerated.");
 	}
+}
+
+std::wstring FS::FullPathW(LPCWSTR directory, LPCWSTR file)
+{
+	return std::wstring(directory) + file;
 }

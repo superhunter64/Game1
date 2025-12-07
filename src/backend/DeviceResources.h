@@ -8,6 +8,7 @@
 #include <d3d12sdklayers.h>
 #include <d3d12shader.h>
 #include <d3dx12.h>
+#include <d3dcompiler.h>
 
 #include <SDL3/SDL.h>
 
@@ -18,11 +19,14 @@ namespace DX
 		DeviceResources() {}
 
 	public:
-		DeviceResources() {}
+//		DeviceResources() {}
 		void SetWindow();
 
 		void CreateDeviceResources();
 		void CreateWindowDependentResources();
+
+		// from https://learn.microsoft.com/en-us/windows/win32/direct3d12/creating-a-basic-direct3d-12-component#loadassets
+		void LoadAssets();
 
 	private:
 		// Set up device resources
@@ -63,5 +67,8 @@ namespace DX
 		DXGI_FORMAT							m_depthBufferFormat;
 		UINT								m_backBufferIndex;
 		UINT								m_backBufferCount;
+
+		// I think this is just establishing vertex information and might be moved out since they're not really 'device resources'
+		ComPtr<ID3DBlob> m_rootSignature;
 	};
 }

@@ -1,5 +1,6 @@
 #include "DeviceResources.h"
 #include "../App.h"
+#include "File.h"
 #include <cstdio>
 
 using namespace DX;
@@ -92,7 +93,7 @@ void DeviceResources::CreateDeviceResources()
         _countof(s_featureLevels), s_featureLevels, D3D_FEATURE_LEVEL_11_0
     };
 
-    HRESULT hr = m_device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
+    hr = m_device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
     if (SUCCEEDED(hr))
     {
         m_featureLevel = featLevels.MaxSupportedFeatureLevel;
@@ -247,6 +248,63 @@ void DeviceResources::CreateWindowDependentResources()
     {
         CD3DX12_HEAP_PROPERTIES depthHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
 
+        D3D12_RESOURCE_DESC depthStencilDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+            m_depthBufferFormat,
+            w,
+            h,
+            1,  // The depth stencil view only has 1 texture
+            1   // use a single mipmap level
+        );
+        depthStencilDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
+        D3D12_CLEAR_VALUE depthOptimizeClearValue = {};
+        depthOptimizeClearValue.Format = m_depthBufferFormat;
+        depthOptimizeClearValue.DepthStencil.Depth = 1.0f;
+        depthOptimizeClearValue.DepthStencil.Stencil = 0;
+
+        ThrowIfFailed(m_device->CreateCommittedResource(&depthHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &depthStencilDesc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &depthOptimizeClearValue,
+            IID_PPV_ARGS(&m_depthStencil)
+        ));
+
+        m_depthStencil->SetName(L"Depth stencil");
+        
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.Format = m_depthBufferFormat;
+        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    }
+
+
+}
+
+void DeviceResources::LoadAssets()
+{
+    // Create an empty root signature
+    {
+        CD3DX12_ROOT_SIGNATURE_DESC desc;
+        desc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+        ComPtr<ID3DBlob> signature;
+        ComPtr<ID3DBlob> error;
+        ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+    }
+
+    // Create the pipeline state -- compile and load shaders
+    {
+        ComPtr<ID3DBlob> vertexShader;
+        ComPtr<ID3DBlob> pixelShader;
+
+#ifdef _DEBUG
+        UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+        UINT compileFlags = 0;
+#endif
+
+        ThrowIfFailed(D3DCompileFromFile(FS::FullPathW(L"", L"shaders.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(FS::FullPathW(L"", L"shaders.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
     }
 }
