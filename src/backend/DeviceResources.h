@@ -1,5 +1,6 @@
 #pragma once
 #include "win_com.h"
+#include "primitives/Vertex.h"
 
 #include <Windows.h>
 #include <dxgi1_6.h>
@@ -11,6 +12,11 @@
 #include <d3dcompiler.h>
 
 #include <SDL3/SDL.h>
+
+#include <array>
+#include <vector>
+#include <algorithm>
+#include <iterator>
 
 namespace DX
 {
@@ -29,6 +35,10 @@ namespace DX
 
 		// from https://learn.microsoft.com/en-us/windows/win32/direct3d12/creating-a-basic-direct3d-12-component#loadassets
 		void LoadAssets();
+
+		template<typename T>
+		void LoadVertexBuffer(const std::vector<T>* vertices);
+		
 		void Render();
 		void PopulateCommandList();
 		void WaitForGPU();

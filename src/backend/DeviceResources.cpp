@@ -342,50 +342,48 @@ void DeviceResources::LoadAssets()
     // We created the command list earlier, so we can just set the pipeline state here
     m_commandList->SetPipelineState(m_pipelineState.Get());
     m_commandList->Close();
-
+    
     m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+}
 
-    float aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
+template<typename T>
+void DeviceResources::LoadVertexBuffer(const std::vector<T>* vertices)
+{
+    const UINT64 bufferWidth = vertices->size() * sizeof(T);
 
-    // Create the vertex buffer
+    auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferWidth);
+
+    // Create the resource (upload heap in this case)
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&m_vertexBuffer)
+    ));
+
+    // Copy the triangle data to the vertex buffer
+    // the vertex buffer is essentially a stream or array of floats   
     {
-        Vertex triVerts[] =
-        {
-            // pos                  color
-            {{0.0f, 0.25f * aspectRatio, 0.0f}, {.8f, 0.0f, 0.0f, 1.0f}},
-            {{0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, .8f, 0.0f, 1.0f}},
-            {{-0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, 0.0f, .8f, 1.0f}}
-        };
-
-        const UINT vBufferSize = sizeof(triVerts);
-
-        auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vBufferSize);
-
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &heapProps,
-            D3D12_HEAP_FLAG_NONE,
-            &bufferDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_vertexBuffer)
-        ));
-
-        // copy the triangle data to the vertex buffer
-        UINT8* pVertexDataBegin;
-        CD3DX12_RANGE readRange(0, 0);  // we don't intend to read this resource on the cpu
-        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-        memcpy(pVertexDataBegin, triVerts, sizeof(triVerts));
+        UINT8* pVertexData;
+        CD3DX12_RANGE readRange(0, 0); // for now, we don't intend to read this resource on the cpu
+        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexData)));
+        memcpy(pVertexData, vertices->data(), static_cast<size_t>(bufferWidth));
         m_vertexBuffer->Unmap(0, nullptr);
-
-        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-        m_vertexBufferView.SizeInBytes = vBufferSize;
     }
 
-    // wait for setup to complete before continuing
+    m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+    m_vertexBufferView.StrideInBytes = sizeof(T);
+    m_vertexBufferView.SizeInBytes = bufferWidth;
+    
     WaitForGPU();
 }
+
+#pragma region Vertex Templates
+template void DX::DeviceResources::LoadVertexBuffer<Vertex>(const std::vector<Vertex>*);
+#pragma endregion
 
 void DeviceResources::Render()
 {

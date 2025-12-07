@@ -62,37 +62,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     auto props = SDL_GetWindowProperties(App::Window);
     App::hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 
-    // Pipeline.Init(App::hwnd);
-
-    //App::Renderer = SDL_CreateRenderer(App::Window, "opengl");
-    //if (not App::Renderer)
-    //{
-    //    SDL_Log("Couldn't create renderer: %s", SDL_GetError());
-    //    return SDL_APP_FAILURE;
-    //}
-    //SDL_SetRenderLogicalPresentation(App::Renderer, App::Width, App::Height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-    //SDL_SetRenderScale(App::Renderer, 1, 1);
-    //
-    //
-    //if (!TTF_Init())
-    //{
-    //    SDL_Log("Couldn't initialize SDL_ttf: %s", SDL_GetError());
-    //    return SDL_APP_FAILURE;
-    //}
-    //
-    //App::TextEngine = TTF_CreateRendererTextEngine(App::Renderer);
-    //if(not App::TextEngine)
-    //{
-    //    SDL_Log("Couldn't create text engine: %s", SDL_GetError());
-    //}
-    //
-    //App::TypeFont = TTF_OpenFont("C:/dev/Game1/Assets/Fonts/OpenSans-Regular.ttf", 36);
-    //if (not App::TypeFont)
-    //{
-    //    SDL_Log("Couldn't create type font: %s", SDL_GetError());
-    //}
-    //testLabel = Label("This is a new label");
-
     NOW = SDL_GetPerformanceCounter();
     LAST = 0;
     deltaTime = 0;
@@ -102,14 +71,18 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     dr.CreateDeviceResources(2);
     dr.CreateWindowDependentResources();
     dr.LoadAssets();
-    dr.PopulateCommandList();
 
-    //Resources::LoadTextures(Path::Textures);
-    //Resources::LoadSpriteSheets(Path::SpriteSheets);
-    //
-    //entities.SpawnMob("Player", 100, 100, "Idle");
-    //entities.SpawnMob("Slime", 0, 0);
-    //entities.SpawnMob("Slime2", 20, 20);
+    float aspectRatio = 1920.f / 1080.f;
+    std::vector<Vertex> triVerts =
+    {
+        // pos                  color
+        {{0.0f, 0.25f * aspectRatio, 0.0f}, {.8f, 0.0f, 0.0f, 1.0f}},
+        {{0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, .8f, 0.0f, 1.0f}},
+        {{-0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, 0.0f, .8f, 1.0f}}
+    };
+
+    dr.LoadVertexBuffer(&triVerts);
+    dr.PopulateCommandList();
 
     return SDL_APP_CONTINUE;
 }
@@ -158,14 +131,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     App::Update();
 
     dr.Render();
-    //SDL_SetRenderDrawColor(App::Renderer, 108, 108, 108, SDL_ALPHA_OPAQUE);
-    //SDL_RenderClear(App::Renderer);
-    //
-    //entities.UpdateAnims();
-    //entities.Draw();
-    //if (App::DebugEnabled) Wireframe::Draw(entities.GetRects());
-    //
-    //SDL_RenderPresent(App::Renderer);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
