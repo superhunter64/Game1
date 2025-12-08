@@ -2,9 +2,11 @@
 
 #include "GpuResource.h"
 
-namespace Gpu
+#include <memory>a
+
+namespace GPU
 {
-	inline ID3D12Device* gDevice = nullptr;
+	inline std::unique_ptr<ID3D12Device> Device = nullptr;
 
 
 	void Init();

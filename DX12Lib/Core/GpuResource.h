@@ -25,6 +25,9 @@ public:
 		m_gpuVirtualAddr = 0;
 	}
 
+	ID3D12Resource* operator->() { return m_resource.Get(); }
+	const ID3D12Resource* operator->() const { return m_resource.Get(); }
+
 	ID3D12Resource* GetResource() { return m_resource.Get(); }
 	const ID3D12Resource* GetResource() const { return m_resource.Get(); }
 	

@@ -1,6 +1,6 @@
 #include "Gpu.h"
 
-namespace Gpu
+namespace GPU
 {
 	void Init()
 	{
