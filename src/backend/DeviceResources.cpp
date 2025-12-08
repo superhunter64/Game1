@@ -135,16 +135,22 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
             IID_PPV_ARGS(&m_commandAllocators[i])));
     }
 
+    // Create bundle alloactor
+    ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE, IID_PPV_ARGS(&m_bundleAllocator)));
+
     // Create command list
+    // This can be replaced with Device4::CreateCommandList1
+    // which initializes the command list as closed since we're not
+    // recording any commands after creation
     ThrowIfFailed(m_device->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         m_commandAllocators[m_backBufferIndex].Get(),
         nullptr,
         IID_PPV_ARGS(&m_commandList)
-    ));
-     
-
+    )); 
+    m_commandList->Close(); 
+    
     SDL_Log("Creating fence...");
     // Create a fence for tracking GPU execution progress
     ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
@@ -338,10 +344,6 @@ void DeviceResources::LoadAssets()
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
     }
-
-    // We created the command list earlier, so we can just set the pipeline state here
-    m_commandList->SetPipelineState(m_pipelineState.Get());
-    m_commandList->Close();
     
     m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 }
@@ -365,7 +367,6 @@ void DeviceResources::LoadVertexBuffer(const std::vector<T>* vertices)
     ));
 
     // Copy the triangle data to the vertex buffer
-    // the vertex buffer is essentially a stream or array of floats   
     {
         UINT8* pVertexData;
         CD3DX12_RANGE readRange(0, 0); // for now, we don't intend to read this resource on the cpu
@@ -377,6 +378,23 @@ void DeviceResources::LoadVertexBuffer(const std::vector<T>* vertices)
     m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
     m_vertexBufferView.StrideInBytes = sizeof(T);
     m_vertexBufferView.SizeInBytes = bufferWidth;
+
+    // Create the bundle
+    {
+        ThrowIfFailed(m_device->CreateCommandList(
+            0,
+            D3D12_COMMAND_LIST_TYPE_BUNDLE,
+            m_bundleAllocator.Get(),
+            m_pipelineState.Get(),
+            IID_PPV_ARGS(&m_bundle)
+        ));
+
+        m_bundle->SetGraphicsRootSignature(m_rootSignature.Get());
+        m_bundle->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        m_bundle->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+        m_bundle->DrawInstanced(3, 1, 0, 0);
+        ThrowIfFailed(m_bundle->Close());
+    } // (?) the bundle seems to execute a command list without having to record the commands every frame
     
     WaitForGPU();
 }
@@ -421,9 +439,8 @@ void DeviceResources::PopulateCommandList()
     // record commands
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced(3, 1, 0, 0);
+
+    m_commandList->ExecuteBundle(m_bundle.Get());
 
     // indicate that the backbuffer will now be used to present
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_backBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

@@ -58,6 +58,10 @@ namespace DX
 		ComPtr<ID3D12GraphicsCommandList>	m_commandList;
 		ComPtr<ID3D12CommandAllocator>		m_commandAllocators[MAX_BACK_BUFFER_COUNT];
 
+		ComPtr<ID3D12GraphicsCommandList>	m_bundle;
+		ComPtr<ID3D12CommandAllocator>		m_bundleAllocator;
+
+
 		// Swap chain objects
 		ComPtr<IDXGIFactory4>				m_dxgiFactory;
 		ComPtr<IDXGISwapChain4>				m_swapChain;
