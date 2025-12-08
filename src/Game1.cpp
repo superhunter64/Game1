@@ -21,7 +21,8 @@
 #include "backend/DX12_Pipeline.h"
 #include "backend/DeviceResources.h"
 
-#include <Core/GpuResource.h>
+//#include <Core/GpuResource.h>
+//#include <Core/Gpu.h>
 
 Character player = {};
 
@@ -68,6 +69,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     LAST = 0;
     deltaTime = 0;
 
+    //GPU::DisplayAdapters();
+
     dr.DisplayAdapters();
     dr.SetWindow();
     dr.CreateDeviceResources(2);
@@ -78,9 +81,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     std::vector<Vertex> triVerts =
     {
         // pos                  color
-        {{0.0f, 0.25f * aspectRatio, 0.0f}, {.8f, 0.0f, 0.0f, 1.0f}},
-        {{0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, .8f, 0.0f, 1.0f}},
-        {{-0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, 0.0f, .8f, 1.0f}}
+        {{0.0f, 0.25f * aspectRatio, 0.0f}, {.5f, 0.0f}},
+        {{0.25f, -0.25f * aspectRatio, 0.0f}, {1.f, 1.f}},
+        {{-0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, 1.f}}
     };
 
     dr.LoadVertexBuffer(&triVerts);

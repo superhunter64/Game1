@@ -1,13 +1,17 @@
 #pragma once
 
-#include "GpuResource.h"
+#include <memory>
 
-#include <memory>a
+#include "GpuResource.h"
+#include "Util.h"
+
+#define BACK_BUFFER_COUNT 2
 
 namespace GPU
 {
-	inline std::unique_ptr<ID3D12Device> Device = nullptr;
+	inline ID3D12Device* gDevice;
+	inline HWND gWindow;
 
-
+	void DisplayAdapters();
 	void Init();
 }

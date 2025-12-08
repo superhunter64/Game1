@@ -33,7 +33,7 @@ add_executable (Game1 "src/Game1.cpp" "src/Game1.h"
 "src/components/Transform.h" "src/UI/ui.h" "src/wireframe/Wireframe.h" 
 "src/systems/EntityManager.h" "src/entities/Mob.h" 
 "src/backend/win_com.h" 
-"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp" "src/backend/DeviceResources.cpp" "src/backend/primitives/Vertex.h" "src/backend/FrameResource.h" "src/backend/FrameResource.cpp" "DX12Lib/Core/GpuResource.h" "DX12Lib/Core/GpuResource.cpp")
+"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp" "src/backend/DeviceResources.cpp" "src/backend/primitives/Vertex.h" "src/backend/FrameResource.h" "src/backend/FrameResource.cpp")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
@@ -84,6 +84,7 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE vendor/DirectX-Headers-1.6
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE 
 	d3d12
 	dxgi
+	dxguid
 	d3dcompiler
 	DirectX-Headers
 	SDL3_ttf::SDL3_ttf      # remove if you are not using SDL_ttf

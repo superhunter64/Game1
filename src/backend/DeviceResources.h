@@ -1,4 +1,6 @@
 #pragma once
+#include <Core/stb_image.h>
+
 #include "win_com.h"
 #include "primitives/Vertex.h"
 
@@ -54,6 +56,8 @@ namespace DX
 		void WaitForGPU();
 		void PrepareNextFrame();
 
+		void CreateTextureFromFile(ID3D12Resource* uploadheap, const std::string& filename);
+
 	private:
 		
 		const static size_t					MAX_BACK_BUFFER_COUNT = 3;
@@ -104,5 +108,8 @@ namespace DX
 		// I think this is just establishing vertex information and might be moved out since they're not really 'device resources'
 		ComPtr<ID3D12Resource> m_vertexBuffer;
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+		ComPtr<ID3D12Resource> m_texture;
+		ComPtr<ID3D12DescriptorHeap> m_textureSrv;
 	};
 }

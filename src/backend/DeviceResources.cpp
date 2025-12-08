@@ -1,3 +1,4 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include "DeviceResources.h"
 #include "../App.h"
 #include "../shared/Paths.h"
@@ -138,18 +139,6 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
     // Create bundle alloactor
     ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE, IID_PPV_ARGS(&m_bundleAllocator)));
 
-    // Create command list
-    // This can be replaced with Device4::CreateCommandList1
-    // which initializes the command list as closed since we're not
-    // recording any commands after creation
-    ThrowIfFailed(m_device->CreateCommandList(
-        0,
-        D3D12_COMMAND_LIST_TYPE_DIRECT,
-        m_commandAllocators[m_backBufferIndex].Get(),
-        nullptr,
-        IID_PPV_ARGS(&m_commandList)
-    )); 
-    m_commandList->Close(); 
     
     SDL_Log("Creating fence...");
     // Create a fence for tracking GPU execution progress
@@ -283,6 +272,7 @@ void DeviceResources::CreateWindowDependentResources()
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
         dsvDesc.Format = m_depthBufferFormat;
         dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+
     }
 
     WaitForGPU();
@@ -298,15 +288,47 @@ void DeviceResources::LoadAssets()
     SDL_Log("Loading assets...");
     // Create an empty root signature
     {
-        CD3DX12_ROOT_SIGNATURE_DESC desc;
-        desc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+
+        if (FAILED(m_device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+        {
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+        }
+
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+
+        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+
+        // have to define the sampler in the root signature if our shader(s) use one
+        D3D12_STATIC_SAMPLER_DESC sampler = {};
+        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        sampler.MipLODBias = 0;
+        sampler.MaxAnisotropy = 0;
+        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        sampler.MinLOD = 0.f;
+        sampler.MaxLOD = D3D12_FLOAT32_MAX;
+        sampler.ShaderRegister = 0;
+        sampler.RegisterSpace = 0;
+        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
+        desc.Init_1_1(_countof(rootParameters), rootParameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
-        ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+        ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&desc, featureData.HighestVersion, &signature, &error), "serialize root signature");
+        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)), "create root signature");
     }
 
+    SDL_Log("Loading pipeline state...");
     // Create the pipeline state -- compile and load shaders
     {
         ComPtr<ID3DBlob> vertexShader;
@@ -325,7 +347,7 @@ void DeviceResources::LoadAssets()
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -344,6 +366,12 @@ void DeviceResources::LoadAssets()
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
     }
+
+    D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+    srvHeapDesc.NumDescriptors = 1;
+    srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_textureSrv)));
     
     m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 }
@@ -351,6 +379,18 @@ void DeviceResources::LoadAssets()
 template<typename T>
 void DeviceResources::LoadVertexBuffer(const std::vector<T>* vertices)
 {
+    // Create command list
+    // This can be replaced with Device4::CreateCommandList1
+    // which initializes the command list as closed since we're not
+    // recording any commands after creation
+    ThrowIfFailed(m_device->CreateCommandList(
+        0,
+        D3D12_COMMAND_LIST_TYPE_DIRECT,
+        m_commandAllocators[m_backBufferIndex].Get(),
+        m_pipelineState.Get(),
+        IID_PPV_ARGS(&m_commandList)
+    ));
+
     const UINT64 bufferWidth = vertices->size() * sizeof(T);
 
     auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -396,6 +436,13 @@ void DeviceResources::LoadVertexBuffer(const std::vector<T>* vertices)
         ThrowIfFailed(m_bundle->Close());
     } // (?) the bundle seems to execute a command list without having to record the commands every frame
     
+    ComPtr<ID3D12Resource> uploadHeap;
+    CreateTextureFromFile(uploadHeap.Get(), "RAD.png");
+
+    ThrowIfFailed(m_commandList->Close());
+    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    
     WaitForGPU();
 }
 
@@ -424,8 +471,11 @@ void DeviceResources::PopulateCommandList()
 
     ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_backBufferIndex].Get(), m_pipelineState.Get()));
 
-    // set necessary state
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    ID3D12DescriptorHeap* ppHeaps[] = { m_textureSrv.Get() };
+    m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_textureSrv->GetGPUDescriptorHandleForHeapStart());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -439,8 +489,9 @@ void DeviceResources::PopulateCommandList()
     // record commands
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-
-    m_commandList->ExecuteBundle(m_bundle.Get());
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->DrawInstanced(3, 1, 0, 0);
 
     // indicate that the backbuffer will now be used to present
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_backBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -477,4 +528,73 @@ void DeviceResources::PrepareNextFrame()
     }
 
     m_fenceValues[m_backBufferIndex] = currentFenceValue + 1;
+}
+
+void DeviceResources::CreateTextureFromFile(ID3D12Resource* uploadHeap, const std::string& filename)
+{
+    {
+        HRESULT hr;
+        std::string fullPath = "C:/dev/Game1/Assets/Textures/" + filename;
+
+        int width, height, nrChannels;
+        unsigned char* data = stbi_load(fullPath.c_str(), &width, &height, &nrChannels, 4);
+
+        // describe and create a texture2d on the cpu
+        D3D12_RESOURCE_DESC textureDesc = {};
+        textureDesc.MipLevels = 1;
+        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        textureDesc.Width = width;
+        textureDesc.Height = height;
+        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        textureDesc.DepthOrArraySize = 1;
+        textureDesc.SampleDesc.Count = 1;
+        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+        auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_texture)
+        ));
+
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture.Get(), 0, 1);
+
+        auto uploadProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        auto uploadBuffer = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+        
+        // create the upload buffer for sending to the gpu
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &uploadProps,
+            D3D12_HEAP_FLAG_NONE,
+            &uploadBuffer,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&uploadHeap)
+        ));
+
+        // copy data to the intermediate upload heap and then schedule a copy
+        // from the upload heap to the Texture2D
+
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = &data[0];
+        textureData.RowPitch = width * 4;
+        textureData.SlicePitch = textureData.RowPitch * height;
+
+        UpdateSubresources(m_commandList.Get(), m_texture.Get(), uploadHeap, 0, 0, 1, &textureData);
+        
+        auto transitionBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &transitionBarrier);
+
+        // describe and create a srv for the texture
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = textureDesc.Format;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_textureSrv.Get()->GetCPUDescriptorHandleForHeapStart());
+    }
 }

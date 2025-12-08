@@ -6,6 +6,9 @@
 #include <Windows.h>
 #include <stdexcept>
 
+#include <d3d12.h>
+#include <dxgi1_6.h>
+
 void ThrowIfFailed(HRESULT hr);
 
 template<typename T>
