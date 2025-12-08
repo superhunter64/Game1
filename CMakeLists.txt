@@ -33,7 +33,7 @@ add_executable (Game1 "src/Game1.cpp" "src/Game1.h"
 "src/components/Transform.h" "src/UI/ui.h" "src/wireframe/Wireframe.h" 
 "src/systems/EntityManager.h" "src/entities/Mob.h" 
 "src/backend/win_com.h" 
-"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp" "src/backend/DeviceResources.cpp" "src/backend/primitives/Vertex.h")
+"src/backend/DX12_Pipeline.h"  "src/backend/DX12_Pipeline.cpp" "src/backend/win_com.cpp" "src/backend/DeviceResources.cpp" "src/backend/primitives/Vertex.h" "src/backend/FrameResource.h" "src/backend/FrameResource.cpp" "DX12Lib/Core/GpuResource.h" "DX12Lib/Core/GpuResource.cpp")
 
 target_sources(${EXECUTABLE_NAME}
 PRIVATE
@@ -45,11 +45,11 @@ target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
 # Configure SDL by calling its CMake file.
 # we use EXCLUDE_FROM_ALL so that its install targets and configs don't
 # pollute upwards into our configuration.
-add_subdirectory(SDL EXCLUDE_FROM_ALL)
+add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
 
 # If you don't want SDL_ttf, then remove this section.
 set(SDLTTF_VENDORED ON) # tell SDL_ttf to build its own dependencies
-add_subdirectory(SDL_ttf EXCLUDE_FROM_ALL)	
+add_subdirectory(vendor/SDL_ttf EXCLUDE_FROM_ALL)	
 
 # SDL_mixer (used for playing audio)
 set(SDLMIXER_MIDI_NATIVE OFF)     # disable formats we don't use to make the build faster and smaller. Also some of these don't work on all platforms so you'll need to do some experimentation.
@@ -62,7 +62,7 @@ set(SDLMIXER_MP3_MPG123 OFF)
 set(SDLMIXER_VORBIS_VORBISFILE OFF)
 set(SDLMIXER_FLAC_LIBFLAC OFF)
 set(SDLMIXER_VENDORED ON)   # tell SDL_mixer to build its own dependencies
-# add_subdirectory(SDL_mixer EXCLUDE_FROM_ALL)
+# add_subdirectory(vendor/SDL_mixer EXCLUDE_FROM_ALL)
 
 # SDL_image (used for loading various image formats)
 set(SDLIMAGE_VENDORED ON)
@@ -70,14 +70,15 @@ set(SDLIMAGE_AVIF OFF)	# disable formats we don't use to make the build faster a
 set(SDLIMAGE_BMP OFF)
 set(SDLIMAGE_JPEG OFF)
 set(SDLIMAGE_WEBP OFF)
-add_subdirectory(SDL_image EXCLUDE_FROM_ALL)
+add_subdirectory(vendor/SDL_image EXCLUDE_FROM_ALL)
 
-add_subdirectory(nlohmann_json EXCLUDE_FROM_ALL)
-#add_subdirectory(FastNoise2 EXCLUDE_FROM_ALL)
-#add_subdirectory(glad/)
-add_subdirectory(DirectX-Headers-1.618.2)
+add_subdirectory(vendor/nlohmann_json EXCLUDE_FROM_ALL)
+#add_subdirectory(vendor/FastNoise2 EXCLUDE_FROM_ALL)
+#add_subdirectory(vendor/glad/)
+add_subdirectory(vendor/DirectX-Headers-1.618.2)
+add_subdirectory(DX12Lib)
 
-target_include_directories(${EXECUTABLE_NAME} PRIVATE DirectX-Headers-1.618.2/include/directx)
+target_include_directories(${EXECUTABLE_NAME} PRIVATE vendor/DirectX-Headers-1.618.2/include/directx DX12Lib)
 
 # Link SDL to our executable. This also makes its include directory available to us. 
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE 
@@ -90,6 +91,7 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 	SDL3_image::SDL3_image	# remove if you are not using SDL_image
     SDL3::SDL3              # If using satelite libraries, SDL must be the last item in the list. 
 	nlohmann_json::nlohmann_json
+	DX12Lib
 	#FastNoise
 )
 

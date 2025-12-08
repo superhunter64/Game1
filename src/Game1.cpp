@@ -21,6 +21,8 @@
 #include "backend/DX12_Pipeline.h"
 #include "backend/DeviceResources.h"
 
+#include <Core/GpuResource.h>
+
 Character player = {};
 
 EntityManager entities = {};

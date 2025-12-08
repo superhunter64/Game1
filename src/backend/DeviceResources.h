@@ -20,6 +20,16 @@
 
 namespace DX
 {
+	using namespace DirectX;
+
+	struct ConstantBuffer
+	{
+		XMFLOAT4X4 WorldMatrix;
+		XMFLOAT4X4 ViewMatrix;
+		XMFLOAT4X4 ProjectionMatrix;
+		XMFLOAT4 padding[4]; // constant buffer must be 256-byte aligned
+	};
+
 	class DeviceResources
 	{
 
@@ -57,10 +67,11 @@ namespace DX
 		ComPtr<ID3D12CommandQueue>			m_commandQueue;
 		ComPtr<ID3D12GraphicsCommandList>	m_commandList;
 		ComPtr<ID3D12CommandAllocator>		m_commandAllocators[MAX_BACK_BUFFER_COUNT];
+		ComPtr<ID3D12RootSignature>			m_rootSignature;
+		ComPtr<ID3D12PipelineState>			m_pipelineState;
 
 		ComPtr<ID3D12GraphicsCommandList>	m_bundle;
 		ComPtr<ID3D12CommandAllocator>		m_bundleAllocator;
-
 
 		// Swap chain objects
 		ComPtr<IDXGIFactory4>				m_dxgiFactory;
@@ -77,8 +88,8 @@ namespace DX
 		ComPtr<ID3D12DescriptorHeap>		m_rtvDescriptorHeap;
 		ComPtr<ID3D12DescriptorHeap>		m_dsvDescriptorHeap;
 		UINT								m_rtvDescriptorSize;
-		CD3DX12_VIEWPORT m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, 1920, 1080);
-		CD3DX12_RECT m_scissorRect = CD3DX12_RECT(0, 0, 1920, 1080);
+		CD3DX12_VIEWPORT					m_viewport				= CD3DX12_VIEWPORT(0.0f, 0.0f, 1920, 1080);
+		CD3DX12_RECT						m_scissorRect			= CD3DX12_RECT(0, 0, 1920, 1080);
 
 		// Device properties
 		HWND								m_window;
@@ -91,8 +102,6 @@ namespace DX
 		UINT								m_backBufferCount;
 
 		// I think this is just establishing vertex information and might be moved out since they're not really 'device resources'
-		ComPtr<ID3D12RootSignature> m_rootSignature;
-		ComPtr<ID3D12PipelineState> m_pipelineState;
 		ComPtr<ID3D12Resource> m_vertexBuffer;
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	};
