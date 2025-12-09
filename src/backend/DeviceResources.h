@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <iterator>
 
+#include <Core/StaticHeap.h>
+
 namespace DX
 {
 	using namespace DirectX;
@@ -110,6 +112,7 @@ namespace DX
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
 		ComPtr<ID3D12Resource> m_texture;
-		ComPtr<ID3D12DescriptorHeap> m_textureSrv;
+		//ComPtr<ID3D12DescriptorHeap> m_textureSrv;
+		DescriptorHeap m_textureSrv = {};
 	};
 }

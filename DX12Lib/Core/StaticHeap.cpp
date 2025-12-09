@@ -23,23 +23,26 @@ void Texture2D::LoadFromFile(const std::string& filename)
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 }
 
-void StaticHeap::Create(ID3D12Device* device, UINT numDescriptors)
+void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags)
 {
-	m_device = device;
-
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-	desc.Type = m_type;
+	desc.Type = type;
 	desc.NumDescriptors = numDescriptors;
-	desc.NodeMask = 0;
-	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	desc.NodeMask = 1;
+	desc.Flags = flags;
 
-	ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_heap)));
+	ThrowIfFailed(m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_heap)));
 
     m_heap->SetName(L"Static heap 1");
+
     m_cpuHandle = m_heap->GetCPUDescriptorHandleForHeapStart();
+    m_gpuHandle = m_heap->GetGPUDescriptorHandleForHeapStart();
+    m_descriptorSize = m_device->GetDescriptorHandleIncrementSize(type);
+
+    NAME_D3D12_OBJECT(m_heap);
 }
 
-void StaticHeap::CreateTexture2D(const std::string& filename)
+void DescriptorHeap::CreateTexture2D(const std::string& filename)
 {
     auto tex = Texture2D();
     tex.LoadFromFile(filename);

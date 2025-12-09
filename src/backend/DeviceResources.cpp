@@ -1,4 +1,3 @@
-#define STB_IMAGE_IMPLEMENTATION
 #include "DeviceResources.h"
 #include "../App.h"
 #include "../shared/Paths.h"
@@ -367,11 +366,8 @@ void DeviceResources::LoadAssets()
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
     }
 
-    D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-    srvHeapDesc.NumDescriptors = 1;
-    srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_textureSrv)));
+    m_textureSrv = DescriptorHeap(m_device.Get());
+    m_textureSrv.Create(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
     
     m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 }
@@ -475,7 +471,7 @@ void DeviceResources::PopulateCommandList()
     ID3D12DescriptorHeap* ppHeaps[] = { m_textureSrv.Get() };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-    m_commandList->SetGraphicsRootDescriptorTable(0, m_textureSrv->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_textureSrv.GetGpuHandle());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 

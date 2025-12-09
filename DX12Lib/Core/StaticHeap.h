@@ -19,23 +19,33 @@ private:
 	ComPtr<ID3D12Resource> m_resource;
 };
 
-class StaticHeap
+
+class DescriptorHeap
 {
 public:
-	StaticHeap(D3D12_DESCRIPTOR_HEAP_TYPE type): m_type(type), m_heap(nullptr) {};
-	~StaticHeap() {};
+	DescriptorHeap(): m_device(nullptr) {}
+	DescriptorHeap(ID3D12Device* device) : m_device(device) {}
 
-	void Create(ID3D12Device* device, UINT numDescriptors);
+	~DescriptorHeap() { m_device = nullptr; }
+
+	void Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 	void CreateTexture2D(const std::string& filename);
+
+	ID3D12DescriptorHeap* Get() { return m_heap.Get(); }
+	const ID3D12DescriptorHeap* Get() const { return m_heap.Get(); }
+
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandle() const { return m_gpuHandle; }
 
 private:
 
 	ID3D12Device* m_device;
 
-	D3D12_DESCRIPTOR_HEAP_TYPE m_type;
-	ComPtr<ID3D12DescriptorHeap> m_heap;
+	D3D12_DESCRIPTOR_HEAP_TYPE m_type = {};
+	ComPtr<ID3D12DescriptorHeap> m_heap = nullptr;
+	UINT m_descriptorSize;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle;
 
 	std::vector<const ID3D12Resource*> m_textures;
 };

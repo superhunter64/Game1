@@ -61,8 +61,8 @@ public:
 	
 protected:
 
-	const RootSignature* m_rootSignature;
-
+	const RootSignature* m_rootSignature = nullptr;
+	
 	DescriptorTable m_descriptorTable = {};
 };
 
