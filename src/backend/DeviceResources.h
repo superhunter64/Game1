@@ -69,7 +69,7 @@ namespace DX
 		int m_height;
 
 		// Direct3D objects
-		ComPtr<ID3D12Device>				m_device;
+		ID3D12Device*						m_device;
 		ComPtr<ID3D12CommandQueue>			m_commandQueue;
 		ComPtr<ID3D12GraphicsCommandList>	m_commandList;
 		ComPtr<ID3D12CommandAllocator>		m_commandAllocators[MAX_BACK_BUFFER_COUNT];
@@ -89,6 +89,9 @@ namespace DX
 		ComPtr<ID3D12Fence>					m_fence;
 		UINT64								m_fenceValues[MAX_BACK_BUFFER_COUNT];
 		WinEvent							m_fenceEvent;
+
+		DescriptorHeap m_rtvHeap;
+		DescriptorHeap m_dsvHeap;
 
 		// Direct3D rendering objects
 		ComPtr<ID3D12DescriptorHeap>		m_rtvDescriptorHeap;

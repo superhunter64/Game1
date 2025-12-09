@@ -69,9 +69,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     LAST = 0;
     deltaTime = 0;
 
-    //GPU::DisplayAdapters();
+    GPU::DisplayAdapters();
 
-    dr.DisplayAdapters();
     dr.SetWindow();
     dr.CreateDeviceResources(2);
     dr.CreateWindowDependentResources();

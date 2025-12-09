@@ -39,6 +39,12 @@ namespace GPU
         }
 #endif
 
+        HRESULT hr = D3D12CreateDevice(
+            nullptr,	// default adapter
+            D3D_FEATURE_LEVEL_11_1,
+            IID_PPV_ARGS(&gDevice)
+        );
+
         // Determine maximum supported feature level for this device
         static const D3D_FEATURE_LEVEL pFeatureLevels[] =
         {
@@ -54,7 +60,7 @@ namespace GPU
         };
 
         D3D_FEATURE_LEVEL pFeatureLevel;
-        HRESULT hr = gDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
+        hr = gDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
         if (SUCCEEDED(hr))
         {
             pFeatureLevel = featLevels.MaxSupportedFeatureLevel;
@@ -63,13 +69,13 @@ namespace GPU
         {
             pFeatureLevel = D3D_FEATURE_LEVEL_11_0;
         }
-
-        hr = D3D12CreateDevice(
-            nullptr,	// default adapter
-            pFeatureLevel,
-            IID_PPV_ARGS(&gDevice)
-        );
 	}
+
+    void SetWindow(HWND hwnd)
+    {
+        gWindow = hwnd;
+    }
+
     D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData()
     {
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};

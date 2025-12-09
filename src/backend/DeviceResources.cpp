@@ -5,7 +5,9 @@
 #include <cstdio> 
 #include "primitives/Vertex.h"
 
+#include <Core/Gpu.h>
 #include <Core/PipelineStateObject.h>
+
 
 using namespace DX;
 
@@ -41,62 +43,9 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
 {
     m_backBufferCount = backBufferCount;
 
-	SDL_Log("***Initializing DX12***");
-#ifdef _DEBUG
-	{
-		SDL_Log("Getting debug interface...");
-		ComPtr<ID3D12Debug> debug = nullptr;
-		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)));
-		debug->EnableDebugLayer();
-	}
-#endif
+    GPU::Init();
 
-    SDL_Log("Creating DXGI Factory...");
-    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFactory)));
-
-
-    SDL_Log("Creating DX12 Device...");
-    HRESULT hr = D3D12CreateDevice(
-        nullptr,	// default adapter
-        D3D_FEATURE_LEVEL_11_0,
-        IID_PPV_ARGS(&m_device)
-    );
-
-    if (FAILED(hr))
-    {
-        SDL_Log("Device creation failed, fallback to warp adapter");
-        ComPtr<IDXGIAdapter> warpAdapter;
-        ThrowIfFailed(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
-        ThrowIfFailed(D3D12CreateDevice(
-            warpAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&m_device)));
-    }
-
-    // Determine maximum supported feature level for this device
-    static const D3D_FEATURE_LEVEL s_featureLevels[] =
-    {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-    };
-
-    D3D12_FEATURE_DATA_FEATURE_LEVELS featLevels =
-    {
-        _countof(s_featureLevels), s_featureLevels, D3D_FEATURE_LEVEL_11_0
-    };
-
-    hr = m_device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
-    if (SUCCEEDED(hr))
-    {
-        m_featureLevel = featLevels.MaxSupportedFeatureLevel;
-    }
-    else
-    {
-        m_featureLevel = D3D_FEATURE_LEVEL_11_0;
-    }
+    m_device = GPU::gDevice;
 
     SDL_Log("Creating command queue...");
     // Create command queue
@@ -111,20 +60,11 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
     SDL_Log("Creating render target view and depth stencil view...");
     // Create descriptor heaps for rtv and dsv
     {
-        D3D12_DESCRIPTOR_HEAP_DESC rtvDesc = {};
-        rtvDesc.NumDescriptors = m_backBufferCount;
-        rtvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvDesc, IID_PPV_ARGS(&m_rtvDescriptorHeap)));
-        m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        m_rtvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_backBufferCount);
 
         if (m_depthBufferFormat != DXGI_FORMAT_UNKNOWN)
         {
-            D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-            desc.NumDescriptors = 1;
-            desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-
-            ThrowIfFailed(m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_dsvDescriptorHeap)));
+            m_dsvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
         }
     }
 
@@ -227,9 +167,9 @@ void DeviceResources::CreateWindowDependentResources()
         desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescriptor(
-            m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+            m_rtvHeap.GetCpuHandle(),
             i,
-            m_rtvDescriptorSize
+            m_rtvHeap.Size()
         );
 
         m_device->CreateRenderTargetView(
@@ -366,7 +306,7 @@ void DeviceResources::LoadAssets()
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
     }
 
-    m_textureSrv = DescriptorHeap(m_device.Get());
+    m_textureSrv = DescriptorHeap(m_device);
     m_textureSrv.Create(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
     
     m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -375,10 +315,7 @@ void DeviceResources::LoadAssets()
 template<typename T>
 void DeviceResources::LoadVertexBuffer(const std::vector<T>* vertices)
 {
-    // Create command list
-    // This can be replaced with Device4::CreateCommandList1
-    // which initializes the command list as closed since we're not
-    // recording any commands after creation
+
     ThrowIfFailed(m_device->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -479,7 +416,7 @@ void DeviceResources::PopulateCommandList()
     auto renderBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_backBufferIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &renderBarrier);
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), m_backBufferIndex, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap.GetCpuHandle(), m_backBufferIndex, m_rtvHeap.Size());
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // record commands

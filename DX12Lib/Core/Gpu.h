@@ -12,6 +12,7 @@ namespace GPU
 	inline ID3D12Device* gDevice;
 	inline HWND gWindow;
 
+	void SetWindow(HWND hwnd);
 	void DisplayAdapters();
 	void Init();
 

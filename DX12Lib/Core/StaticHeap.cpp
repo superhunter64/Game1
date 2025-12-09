@@ -25,6 +25,10 @@ void Texture2D::LoadFromFile(const std::string& filename)
 
 void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags)
 {
+    // TODO: Handle this better by making sure the device is 
+    //      initialized before attempting to create a heap
+    if (not m_device) m_device = GPU::gDevice;
+
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Type = type;
 	desc.NumDescriptors = numDescriptors;

@@ -35,6 +35,9 @@ public:
 	const ID3D12DescriptorHeap* Get() const { return m_heap.Get(); }
 
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandle() const { return m_gpuHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle() const { return m_cpuHandle; }
+
+	UINT Size() const { return m_descriptorSize; }
 
 private:
 
