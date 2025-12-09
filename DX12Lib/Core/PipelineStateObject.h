@@ -7,7 +7,7 @@ enum ParamInitFlag
 	DESCRIPTOR_TABLE
 };
 
-struct DescriptorRange : public CD3DX12_DESCRIPTOR_RANGE1
+struct DescriptorRange : CD3DX12_DESCRIPTOR_RANGE1
 {
 	D3D12_DESCRIPTOR_RANGE_TYPE Type;
 	UINT NumDescriptors;
@@ -16,63 +16,22 @@ struct DescriptorRange : public CD3DX12_DESCRIPTOR_RANGE1
 	D3D12_DESCRIPTOR_RANGE_FLAGS Flags;
 };
 
-struct RootParameter : public CD3DX12_ROOT_PARAMETER1
+struct RootParameter : CD3DX12_ROOT_PARAMETER1
 {
 	ParamInitFlag InitFlag;
 	D3D12_SHADER_VISIBILITY ShaderVisibility;
 };
 
-struct DescriptorTable
+class DescriptorTable
 {
-	inline void AddRange(D3D12_DESCRIPTOR_RANGE_TYPE Type, 
-		UINT NumDescriptors, UINT BaseShaderRegister,
-		UINT RegisterSpace, D3D12_DESCRIPTOR_RANGE_FLAGS Flags)
-	{
-		DescriptorRange r = {};
-		r.Type = Type;
-		r.NumDescriptors = NumDescriptors;
-		r.BaseShaderRegister = BaseShaderRegister;
-		r.RegisterSpace = RegisterSpace;
-		r.Flags = Flags;
-	
-		Ranges.push_back(r);
-	}
-
-	inline void AddParam(D3D12_SHADER_VISIBILITY shaderVisibility)
-	{
-		RootParameter rp = {};
-		rp.InitFlag = ParamInitFlag::DESCRIPTOR_TABLE;
-		rp.ShaderVisibility = shaderVisibility;
-
-		RootParams.push_back(rp);
-	}
-
-	inline CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC InitDesc(D3D12_STATIC_SAMPLER_DESC* sampler = nullptr)
-	{
-		for (int i = 0; i < Ranges.size(); i++)
-		{
-			auto& r = Ranges.at(i);
-			auto& p = RootParams.at(i);
-
-			r.Init(r.Type, r.NumDescriptors, r.BaseShaderRegister, r.RegisterSpace, r.Flags);
-			p.InitAsDescriptorTable(1, &Ranges.at(i), p.ShaderVisibility);
-		}
-
-		UINT numStaticSamplers = 0;
-		if (sampler) {
-			numStaticSamplers = 1;
-		}
-
-		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-		rootSignatureDesc.Init_1_1(RootParams.size(), &RootParams.at(0), 
-			numStaticSamplers, sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	
-		return rootSignatureDesc;
-	}
+public:
+	void AddRange(D3D12_DESCRIPTOR_RANGE_TYPE type, UINT numDescriptors, UINT baseShaderRegister, UINT registerSpace, D3D12_DESCRIPTOR_RANGE_FLAGS flags);
+	void AddParam(D3D12_SHADER_VISIBILITY shaderVisibility);
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC InitDesc(D3D12_STATIC_SAMPLER_DESC* sampler = nullptr);
 
 private:
-	std::vector<DescriptorRange>	Ranges = {};
-	std::vector<RootParameter>		RootParams = {};
+	std::vector<DescriptorRange>	m_ranges = {};
+	std::vector<RootParameter>		m_rootParams = {};
 };
 
 class RootSignature
@@ -94,16 +53,36 @@ private:
 
 class PipelineStateObject
 {
-	PipelineStateObject(ID3D12Device* d) : m_device(d) {};
+public:
+	PipelineStateObject() {};
 
-	void Init();
-
+	void SetRootSignature(const RootSignature& rootSignature) 
+		{ m_rootSignature = &rootSignature; }
+	
 protected:
 
-	ID3D12Device* m_device;
+	const RootSignature* m_rootSignature;
 
 	DescriptorTable m_descriptorTable = {};
-	ComPtr<ID3D12RootSignature> m_rootSignature = nullptr;
 };
 
 typedef PipelineStateObject PSO;
+
+class GraphicsPipelineStateObject : public PSO
+{
+public:
+	GraphicsPipelineStateObject() {};
+
+	void SetInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescs);
+	void SetVertexShader(D3D12_SHADER_BYTECODE byteCode);
+	void SetPixelShader(D3D12_SHADER_BYTECODE byteCode);
+
+	const D3D12_GRAPHICS_PIPELINE_STATE_DESC* GetDesc() { return &m_desc; }
+
+private:
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC m_desc = {};
+	std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputLayout = {};
+};
+
+typedef GraphicsPipelineStateObject GraphicsPSO;

@@ -9,6 +9,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <d3dx12.h>
+#include <d3dcompiler.h>
 
 void ThrowIfFailed(HRESULT hr);
 
@@ -43,3 +44,5 @@ inline void SetNameIndexed(ID3D12Object*, LPCWSTR, UINT)
 // The indexed variant will include the index in the name of the object.
 #define NAME_D3D12_OBJECT(x) SetName((x).Get(), L#x)
 #define NAME_D3D12_OBJECT_INDEXED(x, n) SetNameIndexed((x)[n].Get(), L#x, n)
+
+D3D12_SHADER_BYTECODE CompileShader(const std::wstring& filePath, const std::string& entryPoint, const std::string& target);
