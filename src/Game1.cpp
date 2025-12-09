@@ -86,6 +86,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         {{-0.25f, -0.25f * aspectRatio, 0.0f}, {0.0f, 1.f}}
     };
 
+    
     dr.LoadVertexBuffer(&triVerts);
     dr.PopulateCommandList();
 

@@ -70,4 +70,23 @@ namespace GPU
             IID_PPV_ARGS(&gDevice)
         );
 	}
+    D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData()
+    {
+        D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+     
+        if (not gDevice)
+        {
+            Log("Device must be initialized before checking feature support");
+            return featureData;
+        }
+
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+
+        if (FAILED(gDevice->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+        {
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+        }
+
+        return featureData;
+    }
 }

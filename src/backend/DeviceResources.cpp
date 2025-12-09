@@ -6,6 +6,8 @@
 #include <cstdio> 
 #include "primitives/Vertex.h"
 
+#include <Core/PipelineStateObject.h>
+
 using namespace DX;
 
 void DeviceResources::DisplayAdapters()
@@ -152,7 +154,7 @@ void DeviceResources::CreateDeviceResources(UINT backBufferCount)
 void DeviceResources::CreateWindowDependentResources()
 {
     if (not m_window)
-        ThrowIfFailed(E_HANDLE, "Call SetWindow with a valid Win32 HWND window handle");
+        ThrowIfFailed(E_HANDLE);
 
 
     // Release resources tied to the swap chain and update fence values
@@ -205,9 +207,9 @@ void DeviceResources::CreateWindowDependentResources()
             &sd,
             nullptr,
             nullptr,
-            swapChain.GetAddressOf()), "failed to create swapchain");
+            swapChain.GetAddressOf()));
 
-        ThrowIfFailed(swapChain.As(&m_swapChain), "failed to convert swapchain1 to swapchain4 comptr");
+        ThrowIfFailed(swapChain.As(&m_swapChain));
     }
 
     SDL_Log("Establishing back buffers...");
@@ -297,11 +299,9 @@ void DeviceResources::LoadAssets()
             featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
 
-        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        DescriptorTable dt = {};
+        dt.AddRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+        dt.AddParam(D3D12_SHADER_VISIBILITY_PIXEL);
 
         // have to define the sampler in the root signature if our shader(s) use one
         D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -319,13 +319,13 @@ void DeviceResources::LoadAssets()
         sampler.RegisterSpace = 0;
         sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-        desc.Init_1_1(_countof(rootParameters), rootParameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc = dt.InitDesc(&sampler);
+        //desc.Init_1_1(_countof(rootParameters), rootParameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
-        ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&desc, featureData.HighestVersion, &signature, &error), "serialize root signature");
-        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)), "create root signature");
+        ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&desc, featureData.HighestVersion, &signature, &error));
+        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
     }
 
     SDL_Log("Loading pipeline state...");

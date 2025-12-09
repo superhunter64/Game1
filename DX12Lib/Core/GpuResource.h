@@ -42,3 +42,11 @@ protected:
 	ComPtr<ID3D12Resource> m_resource;
 	D3D12_GPU_VIRTUAL_ADDRESS m_gpuVirtualAddr;
 };
+
+class UploadBuffer : public GpuResource
+{
+public:
+
+
+
+};

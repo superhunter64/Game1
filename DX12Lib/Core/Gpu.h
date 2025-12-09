@@ -14,4 +14,6 @@ namespace GPU
 
 	void DisplayAdapters();
 	void Init();
+
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData();
 }
