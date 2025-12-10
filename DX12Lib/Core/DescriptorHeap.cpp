@@ -1,6 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include "StaticHeap.h"
+#include "DescriptorHeap.h"
 
 void Texture2D::LoadFromFile(const std::string& filename)
 {
@@ -25,10 +25,6 @@ void Texture2D::LoadFromFile(const std::string& filename)
 
 void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags)
 {
-    // TODO: Handle this better by making sure the device is 
-    //      initialized before attempting to create a heap
-    if (not m_device) m_device = GPU::gDevice;
-
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Type = type;
 	desc.NumDescriptors = numDescriptors;
@@ -44,19 +40,4 @@ void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors
     m_descriptorSize = m_device->GetDescriptorHandleIncrementSize(type);
 
     NAME_D3D12_OBJECT(m_heap);
-}
-
-void DescriptorHeap::CreateTexture2D(const std::string& filename)
-{
-    auto tex = Texture2D();
-    tex.LoadFromFile(filename);
-
-    //m_textures.push_back(tex.Get());
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = 1;
-   // m_device->CreateShaderResourceView(m_textures.at(0), &srvDesc, m_cpuHandle);
 }

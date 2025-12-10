@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <iterator>
 
-#include <Core/StaticHeap.h>
+#include <Core/DescriptorHeap.h>
 
 namespace DX
 {
@@ -38,7 +38,8 @@ namespace DX
 	{
 
 	public:
-		DeviceResources() {}
+		DeviceResources() {};
+		DeviceResources(ID3D12Device* device, HWND hwnd);
 
 		// Set up device resources
 		void DisplayAdapters();
@@ -105,7 +106,7 @@ namespace DX
 		D3D_FEATURE_LEVEL                   m_featureLevel;
 
 		// D3D Properties
-		DXGI_FORMAT							m_backBufferFormat;
+		DXGI_FORMAT							m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 		DXGI_FORMAT							m_depthBufferFormat;
 		UINT								m_backBufferIndex;
 		UINT								m_backBufferCount;

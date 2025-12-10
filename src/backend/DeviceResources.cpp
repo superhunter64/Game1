@@ -11,6 +11,15 @@
 
 using namespace DX;
 
+DeviceResources::DeviceResources(ID3D12Device* device, HWND hwnd)
+{
+    m_device = device;
+    m_window = hwnd;
+
+    m_rtvHeap = DescriptorHeap();
+    m_dsvHeap = DescriptorHeap();
+}
+
 void DeviceResources::DisplayAdapters()
 {
     {
@@ -34,17 +43,9 @@ void DeviceResources::DisplayAdapters()
     }
 }
 
-void DeviceResources::SetWindow()
-{
-	m_window = App::hwnd;
-}
-
 void DeviceResources::CreateDeviceResources(UINT backBufferCount)
 {
     m_backBufferCount = backBufferCount;
-
-    GPU::Init();
-
     m_device = GPU::gDevice;
 
     SDL_Log("Creating command queue...");
@@ -187,7 +188,7 @@ void DeviceResources::CreateWindowDependentResources()
         CD3DX12_HEAP_PROPERTIES depthHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
 
         D3D12_RESOURCE_DESC depthStencilDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-            m_depthBufferFormat,
+            DXGI_FORMAT_D32_FLOAT,
             w,
             h,
             1,  // The depth stencil view only has 1 texture
@@ -196,7 +197,7 @@ void DeviceResources::CreateWindowDependentResources()
         depthStencilDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
         D3D12_CLEAR_VALUE depthOptimizeClearValue = {};
-        depthOptimizeClearValue.Format = m_depthBufferFormat;
+        depthOptimizeClearValue.Format = DXGI_FORMAT_D32_FLOAT;
         depthOptimizeClearValue.DepthStencil.Depth = 1.0f;
         depthOptimizeClearValue.DepthStencil.Stencil = 0;
 
@@ -484,6 +485,7 @@ void DeviceResources::CreateTextureFromFile(ID3D12Resource* uploadHeap, const st
         textureDesc.SampleDesc.Quality = 0;
         textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
+        // create the texture
         auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         ThrowIfFailed(m_device->CreateCommittedResource(
             &heapProps,

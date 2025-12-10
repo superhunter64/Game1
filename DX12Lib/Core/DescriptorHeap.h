@@ -23,7 +23,7 @@ private:
 class DescriptorHeap
 {
 public:
-	DescriptorHeap(): m_device(nullptr) {}
+	DescriptorHeap(): m_device(GPU::gDevice) {}
 	DescriptorHeap(ID3D12Device* device) : m_device(device) {}
 
 	~DescriptorHeap() { m_device = nullptr; }
