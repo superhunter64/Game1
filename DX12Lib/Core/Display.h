@@ -2,6 +2,7 @@
 
 #include "Gpu.h"
 #include "DescriptorHeap.h"
+#include "GpuResource.h"
 
 class Display
 {

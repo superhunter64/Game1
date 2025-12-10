@@ -2,6 +2,7 @@
 #include "Gpu.h"
 #include <vector>
 
+/* 
 class Texture2D
 {
 public:
@@ -18,6 +19,7 @@ private:
 
 	ComPtr<ID3D12Resource> m_resource;
 };
+*/
 
 
 class DescriptorHeap

@@ -42,10 +42,6 @@ namespace DX
 		DeviceResources() {};
 		DeviceResources(ID3D12Device* device, HWND hwnd);
 
-		// Set up device resources
-		void DisplayAdapters();
-		void SetWindow();
-
 		void CreateDeviceResources(UINT backBufferCount);
 		void CreateWindowDependentResources();
 

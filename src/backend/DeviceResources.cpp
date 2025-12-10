@@ -20,29 +20,6 @@ DeviceResources::DeviceResources(ID3D12Device* device, HWND hwnd)
     m_dsvHeap = DescriptorHeap();
 }
 
-void DeviceResources::DisplayAdapters()
-{
-    {
-        IDXGIFactory1* factory = nullptr;
-
-        HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&factory));
-
-        UINT i = 0;
-        IDXGIAdapter* adapter = nullptr;
-        if (SUCCEEDED(hr))
-        {
-            while (factory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND)
-            {
-                DXGI_ADAPTER_DESC desc;
-                adapter->GetDesc(&desc);
-                SDL_Log("Adapter: %ws", desc.Description);
-                ++i;
-            }
-        }
-        SDL_Log("******\n\n");
-    }
-}
-
 void DeviceResources::CreateDeviceResources(UINT backBufferCount)
 {
     m_backBufferCount = backBufferCount;

@@ -1,7 +1,8 @@
 #pragma once
+#include "Gpu.h"
 #include "DXHelper.h"
-#include <d3d12.h>
-#include <dxgi1_6.h>
+
+class DirectUploadBuffer;
 
 class GpuResource
 {
@@ -43,10 +44,35 @@ protected:
 	D3D12_GPU_VIRTUAL_ADDRESS m_gpuVirtualAddr;
 };
 
-class UploadBuffer : public GpuResource
+class Texture2D : public GpuResource
 {
+	friend DirectUploadBuffer;
+
 public:
 
+	Texture2D(wchar_t* name) : m_name(name) {};
 
+	void Create(unsigned char* data, int width, int height);
 
+protected:
+
+	D3D12_SUBRESOURCE_DATA m_textureData;
+
+	int m_width;
+	int m_height;
+	std::wstring m_name;
+};
+
+class DirectUploadBuffer
+{
+
+public:
+	DirectUploadBuffer() {};
+
+	void UploadTextures(ID3D12GraphicsCommandList* cmdList, std::vector<Texture2D>& textures);
+	void FillBuffer(std::vector<ComPtr<ID3D12Resource>>& resources);
+
+private:
+
+	std::vector<ComPtr<ID3D12Resource>> m_uploads = {};
 };

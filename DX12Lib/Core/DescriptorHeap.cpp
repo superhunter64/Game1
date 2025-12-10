@@ -2,6 +2,7 @@
 #include "stb_image.h"
 #include "DescriptorHeap.h"
 
+/*
 void Texture2D::LoadFromFile(const std::string& filename)
 {
     HRESULT hr;
@@ -22,7 +23,7 @@ void Texture2D::LoadFromFile(const std::string& filename)
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 }
-
+*/
 void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
