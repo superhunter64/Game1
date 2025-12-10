@@ -111,111 +111,13 @@ void DeviceResources::CreateWindowDependentResources()
     m_height = h;
 
     SDL_Log("Creating or resizing swapchain...");
-    // If the swap chain was already created, resize it, otherwise create a new one
-    if (m_swapChain)
-    {
-        ThrowIfFailed(m_swapChain->ResizeBuffers(
-            m_backBufferCount,
-            w,
-            h,
-            m_backBufferFormat,
-            0
-        ));
-    }
-    else
-    {
-        ComPtr<IDXGIFactory4> factory;
-        ThrowIfFailed(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&factory)));
+    
+    m_display = Display();
+    m_display.CreateSwapchain(m_commandQueue.Get(), m_width, m_height);
+    m_backBufferIndex = m_display.GetCurrentBackBufferIndex();
+    m_display.SetDepthStencil();
 
-        DXGI_SWAP_CHAIN_DESC1 sd = {};
-        sd.Width = w;
-        sd.Height = h;
-        sd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        sd.Scaling = DXGI_SCALING_STRETCH;
-        sd.SampleDesc = { 1, 0 };
-        sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        sd.BufferCount = m_backBufferCount;
-        sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        sd.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-        sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-
-
-        ComPtr<IDXGISwapChain1> swapChain;
-        ThrowIfFailed(factory->CreateSwapChainForHwnd(
-            m_commandQueue.Get(),
-            m_window,
-            &sd,
-            nullptr,
-            nullptr,
-            swapChain.GetAddressOf()));
-
-        ThrowIfFailed(swapChain.As(&m_swapChain));
-    }
-
-    SDL_Log("Establishing back buffers...");
-    // Obtain the back buffers for the window which will be the final render targets
-    // and create render target views for each of them
-    for (UINT i = 0; i < m_backBufferCount; i++)
-    {
-        ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i])));
-
-        wchar_t name[25] = {};
-        swprintf_s(name, L"Render target: %u", i);
-        m_renderTargets[i]->SetName(name);
-
-        D3D12_RENDER_TARGET_VIEW_DESC desc = {};
-        desc.Format = m_backBufferFormat;
-        desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescriptor(
-            m_rtvHeap.GetCpuHandle(),
-            i,
-            m_rtvHeap.Size()
-        );
-
-        m_device->CreateRenderTargetView(
-            m_renderTargets[i].Get(),
-            &desc,
-            rtvDescriptor
-       );
-    }
-
-    m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
-
-    // set up the depth stencil buffer
-    if (m_depthBufferFormat != DXGI_FORMAT_UNKNOWN)
-    {
-        CD3DX12_HEAP_PROPERTIES depthHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
-
-        D3D12_RESOURCE_DESC depthStencilDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-            DXGI_FORMAT_D32_FLOAT,
-            w,
-            h,
-            1,  // The depth stencil view only has 1 texture
-            1   // use a single mipmap level
-        );
-        depthStencilDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-        D3D12_CLEAR_VALUE depthOptimizeClearValue = {};
-        depthOptimizeClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        depthOptimizeClearValue.DepthStencil.Depth = 1.0f;
-        depthOptimizeClearValue.DepthStencil.Stencil = 0;
-
-        ThrowIfFailed(m_device->CreateCommittedResource(&depthHeapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &depthStencilDesc,
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            &depthOptimizeClearValue,
-            IID_PPV_ARGS(&m_depthStencil)
-        ));
-
-        m_depthStencil->SetName(L"Depth stencil");
-        
-        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-        dsvDesc.Format = m_depthBufferFormat;
-        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-
-    }
+    m_swapChain = m_display.GetSwapChain();
 
     WaitForGPU();
 }
@@ -414,10 +316,10 @@ void DeviceResources::PopulateCommandList()
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
     // indicate that the backbuffer will be used as a render target
-    auto renderBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_backBufferIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    auto renderBarrier = m_display.Render();
     m_commandList->ResourceBarrier(1, &renderBarrier);
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap.GetCpuHandle(), m_backBufferIndex, m_rtvHeap.Size());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_display.GetRTVDescriptorHeap()->GetCpuHandle(), m_backBufferIndex, m_display.GetRTVDescriptorHeap()->Size());
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // record commands
@@ -428,7 +330,7 @@ void DeviceResources::PopulateCommandList()
     m_commandList->DrawInstanced(3, 1, 0, 0);
 
     // indicate that the backbuffer will now be used to present
-    auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_backBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    auto presentBarrier = m_display.Present();
     m_commandList->ResourceBarrier(1, &presentBarrier);
 
     ThrowIfFailed(m_commandList->Close());

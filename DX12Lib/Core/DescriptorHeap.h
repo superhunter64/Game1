@@ -34,8 +34,8 @@ public:
 	ID3D12DescriptorHeap* Get() { return m_heap.Get(); }
 	const ID3D12DescriptorHeap* Get() const { return m_heap.Get(); }
 
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandle() const { return m_gpuHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle() const { return m_cpuHandle; }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandle() const { return m_heap->GetGPUDescriptorHandleForHeapStart(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle() const { return m_heap->GetCPUDescriptorHandleForHeapStart(); }
 
 	UINT Size() const { return m_descriptorSize; }
 
@@ -46,9 +46,6 @@ private:
 	D3D12_DESCRIPTOR_HEAP_TYPE m_type = {};
 	ComPtr<ID3D12DescriptorHeap> m_heap = nullptr;
 	UINT m_descriptorSize;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle;
 
 	std::vector<const ID3D12Resource*> m_textures;
 };

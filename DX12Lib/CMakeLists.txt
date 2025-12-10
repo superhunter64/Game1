@@ -11,14 +11,14 @@ set(HEADER_FILES
 	"Core/Mesh.h" 
 	"Core/stb_image.h" 
 	 
-	"Core/Shader.h" "Core/DescriptorHeap.h" "Core/PipelineStateObject.h" "Core/Renderer.h")
+	"Core/Shader.h" "Core/DescriptorHeap.h" "Core/PipelineStateObject.h" "Core/Renderer.h" "Core/Display.h")
 
 set(SOURCE_FILES
 	Core/DXHelper.cpp
 	"Core/Gpu.cpp"
 	"Core/CommandContext.cpp"
 	"Core/GpuBuffer.cpp"
-	 "Core/DescriptorHeap.cpp" "Core/PipelineStateObject.cpp" "Core/Renderer.cpp")
+	 "Core/DescriptorHeap.cpp" "Core/PipelineStateObject.cpp" "Core/Renderer.cpp" "Core/Display.cpp")
  
 add_library(DX12Lib STATIC ${HEADER_FILES} ${SOURCE_FILES})
 

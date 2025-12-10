@@ -21,6 +21,7 @@
 #include <iterator>
 
 #include <Core/DescriptorHeap.h>
+#include <Core/Display.h>
 
 namespace DX
 {
@@ -82,7 +83,7 @@ namespace DX
 
 		// Swap chain objects
 		ComPtr<IDXGIFactory4>				m_dxgiFactory;
-		ComPtr<IDXGISwapChain4>				m_swapChain;
+		IDXGISwapChain4*					m_swapChain;
 		ComPtr<ID3D12Resource>				m_renderTargets[MAX_BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource>				m_depthStencil;
 
@@ -91,6 +92,7 @@ namespace DX
 		UINT64								m_fenceValues[MAX_BACK_BUFFER_COUNT];
 		WinEvent							m_fenceEvent;
 
+		Display m_display;
 		DescriptorHeap m_rtvHeap;
 		DescriptorHeap m_dsvHeap;
 

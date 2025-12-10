@@ -35,8 +35,6 @@ void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors
 
     m_heap->SetName(L"Static heap 1");
 
-    m_cpuHandle = m_heap->GetCPUDescriptorHandleForHeapStart();
-    m_gpuHandle = m_heap->GetGPUDescriptorHandleForHeapStart();
     m_descriptorSize = m_device->GetDescriptorHandleIncrementSize(type);
 
     NAME_D3D12_OBJECT(m_heap);
