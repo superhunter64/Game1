@@ -22,6 +22,7 @@
 
 #include <Core/DescriptorHeap.h>
 #include <Core/Display.h>
+#include <Core/GpuResource.h>
 
 namespace DX
 {
@@ -106,7 +107,7 @@ namespace DX
 		// D3D Properties
 		DXGI_FORMAT							m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 		DXGI_FORMAT							m_depthBufferFormat;
-		UINT								m_backBufferIndex;
+		UINT								m_backBufferIndex = 0;
 		UINT								m_backBufferCount;
 
 		// I think this is just establishing vertex information and might be moved out since they're not really 'device resources'
@@ -116,5 +117,8 @@ namespace DX
 		ComPtr<ID3D12Resource> m_texture;
 		//ComPtr<ID3D12DescriptorHeap> m_textureSrv;
 		DescriptorHeap m_textureSrv = {};
+		Texture2D m_tex2d;
+
+		DirectUploadBuffer m_uploadBuffer;
 	};
 }

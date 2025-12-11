@@ -119,7 +119,7 @@ void DeviceResources::LoadAssets()
         }
 
         DescriptorTable dt = {};
-        dt.AddRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+        dt.AddRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
         dt.AddParam(D3D12_SHADER_VISIBILITY_PIXEL);
 
         // have to define the sampler in the root signature if our shader(s) use one
@@ -352,6 +352,15 @@ void DeviceResources::CreateTextureFromFile(ID3D12Resource* uploadHeap, const st
         int width, height, nrChannels;
         unsigned char* data = stbi_load(fullPath.c_str(), &width, &height, &nrChannels, 4);
 
+        m_tex2d.Create(data, width, height);
+
+        std::vector<Texture2D> textures = {
+            m_tex2d
+        };
+
+        m_uploadBuffer.UploadTextures(m_commandList.Get(), &m_textureSrv, textures);
+
+        /*
         // describe and create a texture2d on the cpu
         D3D12_RESOURCE_DESC textureDesc = {};
         textureDesc.MipLevels = 1;
@@ -410,5 +419,6 @@ void DeviceResources::CreateTextureFromFile(ID3D12Resource* uploadHeap, const st
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
         m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_textureSrv.Get()->GetCPUDescriptorHandleForHeapStart());
+        */
     }
 }

@@ -1,8 +1,16 @@
 #pragma once
 #include "Gpu.h"
 #include "DXHelper.h"
+#include "DescriptorHeap.h"
 
 class DirectUploadBuffer;
+
+struct TextureStruct
+{
+	unsigned char* data;
+	UINT width;
+	UINT height;
+};
 
 class GpuResource
 {
@@ -50,12 +58,14 @@ class Texture2D : public GpuResource
 
 public:
 
+	Texture2D() : m_name(L"") {};
 	Texture2D(wchar_t* name) : m_name(name) {};
 
 	void Create(unsigned char* data, int width, int height);
 
 protected:
 
+	unsigned char* m_data;
 	D3D12_SUBRESOURCE_DATA m_textureData;
 
 	int m_width;
@@ -69,7 +79,7 @@ class DirectUploadBuffer
 public:
 	DirectUploadBuffer() {};
 
-	void UploadTextures(ID3D12GraphicsCommandList* cmdList, std::vector<Texture2D>& textures);
+	void UploadTextures(ID3D12GraphicsCommandList* cmdList, DescriptorHeap* srvHeap, std::vector<Texture2D>& textures);
 	void FillBuffer(std::vector<ComPtr<ID3D12Resource>>& resources);
 
 private:

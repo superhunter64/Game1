@@ -25,6 +25,7 @@ void Texture2D::Create(unsigned char* data, int width, int height)
 
 	// data might have to be memcpy'd here because if the original
 	// pointer goes out of scope before uploading, this might be undefined
+	NAME_D3D12_OBJECT(m_resource);
 
 	m_textureData = {};
 	m_textureData.pData = &data[0];
@@ -32,9 +33,11 @@ void Texture2D::Create(unsigned char* data, int width, int height)
 	m_textureData.SlicePitch = m_textureData.RowPitch * height;
 }
 
-void DirectUploadBuffer::UploadTextures(ID3D12GraphicsCommandList* cmdList, std::vector<Texture2D>& textures)
+void DirectUploadBuffer::UploadTextures(ID3D12GraphicsCommandList* cmdList, DescriptorHeap* srvHeap, std::vector<Texture2D>& textures)
 {
 	m_uploads.resize(textures.size());
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(srvHeap->GetCpuHandle());
 
     for (UINT i = 0; i < textures.size(); i++)
     {
@@ -59,6 +62,10 @@ void DirectUploadBuffer::UploadTextures(ID3D12GraphicsCommandList* cmdList, std:
 			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		
 		cmdList->ResourceBarrier(1, &transitionBarrier);
+
+		srvHeap->BuildSrv(textures[i].GetResource());
+
+		cpuHandle.Offset(srvHeap->Size());
     }
 }
 
@@ -80,6 +87,4 @@ void DirectUploadBuffer::FillBuffer(std::vector<ComPtr<ID3D12Resource>>& resourc
 			IID_PPV_ARGS(&m_uploads[i])
 		));
 	}
-
-
 }

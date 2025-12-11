@@ -40,3 +40,14 @@ void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors
 
     NAME_D3D12_OBJECT(m_heap);
 }
+
+void DescriptorHeap::BuildSrv(ID3D12Resource* resource, DXGI_FORMAT format)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+
+    m_device->CreateShaderResourceView(resource, &srvDesc, GetCpuHandle());
+}

@@ -78,6 +78,8 @@ add_subdirectory(vendor/nlohmann_json EXCLUDE_FROM_ALL)
 add_subdirectory(vendor/DirectX-Headers-1.618.2)
 add_subdirectory(DX12Lib)
 
+add_subdirectory(vendor/assimp)
+
 target_include_directories(${EXECUTABLE_NAME} PRIVATE vendor/DirectX-Headers-1.618.2/include/directx DX12Lib)
 
 # Link SDL to our executable. This also makes its include directory available to us. 

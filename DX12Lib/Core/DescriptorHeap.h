@@ -32,6 +32,7 @@ public:
 
 	void Create(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 	void CreateTexture2D(const std::string& filename);
+	void BuildSrv(ID3D12Resource* resource, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
 
 	ID3D12DescriptorHeap* Get() { return m_heap.Get(); }
 	const ID3D12DescriptorHeap* Get() const { return m_heap.Get(); }
